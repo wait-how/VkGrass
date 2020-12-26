@@ -1,0 +1,6 @@
+debug
+bench
+space.code-workspace
+.dep
+.obj
+*.spv
