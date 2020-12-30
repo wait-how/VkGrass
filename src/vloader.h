@@ -27,7 +27,7 @@ namespace vload {
 
 	class vloader {
 	public:
-		vloader(std::string_view path);
+		vloader(std::string_view path, bool makeIndices);
 		std::vector<mesh> meshList;
 	private:
 		void processNode(aiNode* node, const aiScene* scene);

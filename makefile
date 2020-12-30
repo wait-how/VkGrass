@@ -40,7 +40,7 @@ BINS := debug bench small lineprofile timeprofile
 all: debug
 
 # important warnings, full debug info, some optimization
-debug: CFLAGS += -Wextra -g$(DB) -Og
+debug: CFLAGS += -Wextra -g$(DB)
 
 # fastest executable on my machine
 bench: CFLAGS += -Ofast -march=native -ffast-math -flto=thin -D NDEBUG

@@ -17,13 +17,12 @@ Runtime deps (listed as arch packages):
  - glfw
 
 TODO:
-2. Render grass
-  - render instances of grass all over the hills
+1. Render grass
   - use tesselation shader for lod'ing things if required
-  - use alpha to get grass to overlap
   - get grass to move from wind
-3. Render skybox
-4. Render sun
+  - why do I have to flip UVs for grass?
+2. Render skybox
+3. Render sun
 
 Credits:
 Grass billboard texture: [Reiner “Tiles” Prokein](https://www.reinerstilesets.de/graphics/lizenz/)

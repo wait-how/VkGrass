@@ -9,18 +9,23 @@ using std::cout;
 using std::endl;
 
 namespace vload {
-
-	vloader::vloader(std::string_view path) : meshList() {
+	
+	vloader::vloader(std::string_view path, bool index) : meshList() {
 		Assimp::Importer imp;
-		// make everything triangles, generate normals/tangents if they aren't there, and join identical vertices together.
-		// NOTE: if JoinIdenticalVertices isn't specified, an index buffer isn't required.
-		const aiScene* scene = imp.ReadFile(path.data(), aiProcess_Triangulate 
-												| aiProcess_CalcTangentSpace
-												| aiProcess_GenNormals
-												| aiProcess_JoinIdenticalVertices
-												| aiProcess_OptimizeMeshes
-												| aiProcess_OptimizeGraph
-												);
+
+		// make everything triangles, generate normals if they aren't there, and join identical vertices together
+		unsigned int flags = aiProcess_Triangulate 
+							| aiProcess_GenNormals
+							| aiProcess_FlipUVs
+							| aiProcess_OptimizeMeshes
+							| aiProcess_OptimizeGraph;
+		
+		if (index) {
+			// NOTE: if JoinIdenticalVertices isn't specified, an index buffer isn't required.
+			flags |= aiProcess_JoinIdenticalVertices;
+		}
+		
+		const aiScene* scene = imp.ReadFile(path.data(), flags);
 
 		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
 			std::string err = imp.GetErrorString();
@@ -90,8 +95,6 @@ namespace vload {
 			} else {
 				cout << "mesh has no texture coordinates, cannot calculate tangents" << endl;
 			}
-		} else {
-			cout << "mesh has no tangents" << endl;
 		}
 		
 		return mesh(vList, indices);

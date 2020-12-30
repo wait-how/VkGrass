@@ -47,7 +47,7 @@ void appvk::endSingleCommand(VkCommandBuffer buf) {
 }
 
 // need to create a command buffer per swapchain image
-void appvk::allocRenderCmdBuffers(uint32_t numIndices) {
+void appvk::allocRenderCmdBuffers() {
     commandBuffers.resize(swapFramebuffers.size());
     
     VkCommandBufferAllocateInfo allocInfo{};
@@ -81,19 +81,28 @@ void appvk::allocRenderCmdBuffers(uint32_t numIndices) {
         
         rBeginInfo.clearValueCount = 2;
         rBeginInfo.pClearValues = attachClearValues;
+
+        auto& cbuf = commandBuffers[i];
         
-        // actually render stuff!
         // commands here respect submission order, but draw command pipeline stages can go out of order
-        vkCmdBeginRenderPass(commandBuffers[i], &rBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-        vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, terrainPipe);
+        vkCmdBeginRenderPass(cbuf, &rBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+            VkDeviceSize offset[] = { 0 };
+            vkCmdBindPipeline(cbuf, VK_PIPELINE_BIND_POINT_GRAPHICS, terrainPipe);
+            vkCmdBindVertexBuffers(cbuf, 0, 1, &terrainVertBuf, offset);
+            vkCmdBindIndexBuffer(cbuf, terrainIndBuf, 0, VK_INDEX_TYPE_UINT32);
+            vkCmdBindDescriptorSets(cbuf, VK_PIPELINE_BIND_POINT_GRAPHICS, terrainPipeLayout, 0, 1, &terrainSet[i], 0, nullptr);
+            vkCmdDrawIndexed(cbuf, terrainIndices, 1, 0, 0, 0);
 
-        VkDeviceSize offsets[] = { 0 };
+            VkDeviceSize offsets[] = { 0, 0 };
+            VkBuffer bufs[] = {grassVertBuf, grassVertInstBuf};
+            vkCmdNextSubpass(cbuf, VK_SUBPASS_CONTENTS_INLINE);
 
-        vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, &terrainVertBuf, offsets);
-        vkCmdBindIndexBuffer(commandBuffers[i], terrainIndBuf, 0, VK_INDEX_TYPE_UINT32);
-        vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, terrainPipeLayout, 0, 1, &dSet[i], 0, nullptr);
-        vkCmdDrawIndexed(commandBuffers[i], numIndices, 1, 0, 0, 0);
-        vkCmdEndRenderPass(commandBuffers[i]);
+            vkCmdBindPipeline(cbuf, VK_PIPELINE_BIND_POINT_GRAPHICS, grassPipe);
+            vkCmdBindVertexBuffers(cbuf, 0, 2, bufs, offsets);
+            vkCmdBindDescriptorSets(cbuf, VK_PIPELINE_BIND_POINT_GRAPHICS, terrainPipeLayout, 0, 1, &grassSet[i], 0, nullptr);
+            vkCmdDraw(cbuf, grassVertices, grassInstances, 0, 0);
+
+        vkCmdEndRenderPass(cbuf);
         
         if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS) {
             throw std::runtime_error("cannot record into command buffer!");

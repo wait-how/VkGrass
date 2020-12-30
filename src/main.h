@@ -140,8 +140,10 @@ private:
     VkDescriptorPool dPool = VK_NULL_HANDLE;
     void createDescriptorPool();
 
-    std::vector<VkDescriptorSet> dSet;
-    void allocDescriptorSets();
+    std::vector<VkDescriptorSet> terrainSet;
+	std::vector<VkDescriptorSet> grassSet;
+    void allocDescriptorSets(std::vector<VkDescriptorSet>& dSet);
+	void allocDescriptorSetTexture(std::vector<VkDescriptorSet>& dSet, VkSampler samp, VkImageView view);
 
 	std::vector<char> readFile(const std::string& path);
     VkShaderModule createShaderModule(const std::vector<char>& spv);
@@ -181,12 +183,14 @@ private:
 
 	VkBuffer grassVertInstBuf = VK_NULL_HANDLE;
 	VkDeviceMemory grassVertInstMem = VK_NULL_HANDLE;
-
     std::pair<VkBuffer, VkDeviceMemory> createVertexBuffer(std::vector<vload::vertex>& v);
 	std::pair<VkBuffer, VkDeviceMemory> createVertexBuffer(const std::vector<uint8_t>& verts);
 
 	VkBuffer terrainIndBuf = VK_NULL_HANDLE;
 	VkDeviceMemory terrainIndMem = VK_NULL_HANDLE;
+
+	VkBuffer grassIndBuf = VK_NULL_HANDLE;
+	VkDeviceMemory grassIndMem = VK_NULL_HANDLE;
     std::pair<VkBuffer, VkDeviceMemory> createIndexBuffer(const std::vector<uint32_t>& indices);
 
 	VkImage terrainImage = VK_NULL_HANDLE;
@@ -217,7 +221,11 @@ private:
 	
 	std::vector<VkCommandBuffer> commandBuffers;
 	
-	void allocRenderCmdBuffers(uint32_t numIndices);
+	uint32_t terrainIndices;
+	uint32_t grassVertices;
+	uint32_t grassInstances;
+	uint32_t grassIndices;
+	void allocRenderCmdBuffers();
 
 	constexpr static unsigned int framesInFlight = 2;
 
@@ -227,8 +235,6 @@ private:
 	std::vector<VkFence> inFlightFences; // use fences so we actually wait until a frame completes before moving on to the next one
 	std::vector<VkFence> imagesInFlight; // track frames in flight because acquireNextImageKHR may not return swapchain indices in order
     void createSyncs();
-
-	uint32_t numIndices = 0;
 
     void recreateSwapChain();
 

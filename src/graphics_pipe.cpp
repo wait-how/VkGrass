@@ -66,15 +66,24 @@ void appvk::createRenderPass() {
     resolveAttachmentRef.attachment = 2;
     resolveAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-    VkSubpassDescription sub{};
-    sub.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-    sub.colorAttachmentCount = 1; // color attachments are FS outputs, can also specify input / depth attachments, etc.
-    sub.pColorAttachments = &colorAttachmentRef;
-    sub.pResolveAttachments = &resolveAttachmentRef;
-    sub.pDepthStencilAttachment = &depthAttachmentRef;
+    VkSubpassDescription subs[2] = {};
+    subs[0].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+    subs[0].colorAttachmentCount = 1; // color attachments are FS outputs, can also specify input / depth attachments, etc.
+    subs[0].pColorAttachments = &colorAttachmentRef;
+    subs[0].pResolveAttachments = &resolveAttachmentRef;
+    subs[0].pDepthStencilAttachment = &depthAttachmentRef;
 
-    VkSubpassDependency deps[1] = {}; // there's a WAW dependency between writing images due to where imageAvailSems waits
+    subs[1].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+    subs[1].colorAttachmentCount = 1;
+    subs[1].pColorAttachments = &colorAttachmentRef;
+    subs[1].pResolveAttachments = &resolveAttachmentRef;
+    subs[1].pDepthStencilAttachment = &depthAttachmentRef;
+
+    VkSubpassDependency deps[2] = {};
+    // there's a WAW dependency between writing images due to where imageAvailSems waits
     // solution here is to delay writing to the framebuffer until the image we need is acquired (and the transition has taken place)
+    
+    // write terrain
     deps[0].srcSubpass = VK_SUBPASS_EXTERNAL; // implicit subpass at start of render pass
     deps[0].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // stage we're waiting on
     deps[0].srcAccessMask = 0; // what we're using that input for
@@ -83,13 +92,22 @@ void appvk::createRenderPass() {
     deps[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // stage we write to
     deps[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT; // what we're using that output for
 
+    // write grass
+    deps[1].srcSubpass = 0;
+    deps[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    deps[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+    deps[1].dstSubpass = 1;
+    deps[1].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    deps[1].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
     VkRenderPassCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     createInfo.attachmentCount = 3;
     createInfo.pAttachments = attachments;
-    createInfo.subpassCount = 1;
-    createInfo.pSubpasses = &sub;
-    createInfo.dependencyCount = 1;
+    createInfo.subpassCount = 2;
+    createInfo.pSubpasses = subs;
+    createInfo.dependencyCount = 2;
     createInfo.pDependencies = deps;
 
     if (vkCreateRenderPass(dev, &createInfo, nullptr, &renderPass) != VK_SUCCESS) {
@@ -227,7 +245,7 @@ void appvk::createGraphicsPipeline() {
     pipeCreateInfo.pInputAssemblyState = &inAsmCreateInfo;
     pipeCreateInfo.pViewportState = &viewCreateInfo;
     pipeCreateInfo.pRasterizationState = &rasterCreateInfo;
-    pipeCreateInfo.pMultisampleState = &msCreateInfo;https://www.khronos.org/registry/vulkan/specs/1.2-extensions/html/vkspec.html#VUID-VkPipelineVertexInputStateCreateInfo-pVertexBindingDescript
+    pipeCreateInfo.pMultisampleState = &msCreateInfo;
     pipeCreateInfo.pDepthStencilState = &dCreateInfo;
     pipeCreateInfo.pColorBlendState = &colorCreateInfo;
     pipeCreateInfo.layout = terrainPipeLayout; // handle, not a struct.
@@ -282,7 +300,7 @@ void appvk::createGraphicsPipeline() {
         attrDesc2[i].binding = 1;
         attrDesc2[i].format = VK_FORMAT_R32G32B32A32_SFLOAT;
         attrDesc2[i].location = i;
-        attrDesc2[i].offset = sizeof(glm::vec4) * i; // NOTE: vertex inputs _have_ to be distinct even if they come from different binding points.
+        attrDesc2[i].offset = sizeof(glm::vec4) * (i - 3); // NOTE: vertex inputs _have_ to be distinct even if they come from different binding points.
     }
 
     VkPipelineVertexInputStateCreateInfo vinCreateInfo2{};
@@ -320,15 +338,26 @@ void appvk::createGraphicsPipeline() {
     rasterCreateInfo2.depthBiasEnable = VK_FALSE;
     rasterCreateInfo2.lineWidth = 1.0f;
 
+    VkPipelineDepthStencilStateCreateInfo dCreateInfo2{};
+    dCreateInfo2.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    dCreateInfo2.depthTestEnable = VK_TRUE;
+    dCreateInfo2.depthWriteEnable = VK_TRUE;
+    dCreateInfo2.depthCompareOp = VK_COMPARE_OP_LESS;
+    dCreateInfo2.depthBoundsTestEnable = VK_FALSE;
+    dCreateInfo2.stencilTestEnable = VK_FALSE;
+
+    pipeCreateInfo.flags = VK_PIPELINE_CREATE_DERIVATIVE_BIT;
     pipeCreateInfo.basePipelineHandle = terrainPipe;
     pipeCreateInfo.basePipelineIndex = -1;
-    pipeCreateInfo.flags = VK_PIPELINE_CREATE_DERIVATIVE_BIT;
     pipeCreateInfo.pStages = grassShaders;
     pipeCreateInfo.pVertexInputState = &vinCreateInfo2;
     pipeCreateInfo.pRasterizationState = &rasterCreateInfo2;
     pipeCreateInfo.pColorBlendState = &colorCreateInfo2;
+    pipeCreateInfo.pDepthStencilState = &dCreateInfo2;
     pipeCreateInfo.layout = terrainPipeLayout;
+
     // render pass is the same
+    pipeCreateInfo.subpass = 1;
     
     if (vkCreateGraphicsPipelines(dev, VK_NULL_HANDLE, 1, &pipeCreateInfo, nullptr, &grassPipe) != VK_SUCCESS) {
         throw std::runtime_error("cannot create graphics pipeline!");

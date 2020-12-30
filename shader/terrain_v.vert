@@ -3,9 +3,9 @@
 // right handed system, -Y is up normally but I flipped the rasterizer
 // depth goes from 0 to 1 as object gets farther away
 
-layout (binding = 0, location = 0) in vec3 position;
-layout (binding = 0, location = 1) in vec3 normal;
-layout (binding = 0, location = 2) in vec2 texcoord;
+layout (location = 0) in vec3 position;
+layout (location = 1) in vec3 normal;
+layout (location = 2) in vec2 texcoord;
 
 layout (set = 0, binding = 0) uniform uniformBuffer {
 	mat4 model;

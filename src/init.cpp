@@ -74,7 +74,7 @@ VKAPI_ATTR VkBool32 appvk::debugCallback(
     (void) userData;
     
     cerr << "\t" << data->pMessage << "\n";
-    return VK_FALSE; // don't abort on error in callback
+    return VK_TRUE; // abort on error
 }
 
 void appvk::populateDebugMessenger(VkDebugUtilsMessengerCreateInfoEXT &createInfo) {

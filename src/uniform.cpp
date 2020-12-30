@@ -46,7 +46,7 @@ void appvk::createDescriptorPool() {
 
     VkDescriptorPoolCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    createInfo.maxSets = swapImages.size();
+    createInfo.maxSets = swapImages.size() * 2;
     createInfo.poolSizeCount = 2;
     createInfo.pPoolSizes = poolSizes;
 
@@ -55,7 +55,7 @@ void appvk::createDescriptorPool() {
     }
 }
 
-void appvk::allocDescriptorSets() {
+void appvk::allocDescriptorSets(std::vector<VkDescriptorSet>& dSet) {
     std::vector<VkDescriptorSetLayout> dLayout(swapImages.size(), dSetLayout);
 
     VkDescriptorSetAllocateInfo allocInfo{};
@@ -75,28 +75,35 @@ void appvk::allocDescriptorSets() {
         bufferInfo.offset = 0;
         bufferInfo.range = sizeof(ubo);
 
+        VkWriteDescriptorSet set{};
+        set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        set.dstSet = dSet[i];
+        set.dstBinding = 0;
+        set.dstArrayElement = 0;
+        set.descriptorCount = 1;
+        set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        set.pBufferInfo = &bufferInfo;
+
+        vkUpdateDescriptorSets(dev, 1, &set, 0, nullptr);
+    }
+}
+
+void appvk::allocDescriptorSetTexture(std::vector<VkDescriptorSet>& dSet, VkSampler samp, VkImageView view) {
+    for (size_t i = 0; i < swapImages.size(); i++) {
         VkDescriptorImageInfo imageInfo{};
-        imageInfo.sampler = terrainSamp;
-        imageInfo.imageView = terrainView;
+        imageInfo.sampler = samp;
+        imageInfo.imageView = view;
         imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-        VkWriteDescriptorSet sets[2] = {};
-        sets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        sets[0].dstSet = dSet[i];
-        sets[0].dstBinding = 0;
-        sets[0].dstArrayElement = 0;
-        sets[0].descriptorCount = 1;
-        sets[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        sets[0].pBufferInfo = &bufferInfo;
+        VkWriteDescriptorSet set{};
+        set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        set.dstSet = dSet[i];
+        set.dstBinding = 1;
+        set.dstArrayElement = 0;
+        set.descriptorCount = 1;
+        set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        set.pImageInfo = &imageInfo;
 
-        sets[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        sets[1].dstSet = dSet[i];
-        sets[1].dstBinding = 1;
-        sets[1].dstArrayElement = 0;
-        sets[1].descriptorCount = 1;
-        sets[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        sets[1].pImageInfo = &imageInfo;
-
-        vkUpdateDescriptorSets(dev, 2, sets, 0, nullptr);
+        vkUpdateDescriptorSets(dev, 1, &set, 0, nullptr);
     }
 }

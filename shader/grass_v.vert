@@ -1,10 +1,10 @@
 #version 460
 
-layout (binding = 0, location = 0) in vec3 position;
-layout (binding = 0, location = 1) in vec3 normal;
-layout (binding = 0, location = 2) in vec2 texcoord;
+layout (location = 0) in vec3 position;
+layout (location = 1) in vec3 normal;
+layout (location = 2) in vec2 texcoord;
 
-layout (binding = 1, location = 3) in mat4 instance_model;
+layout (location = 3) in mat4 instance_model;
 
 layout (set = 0, binding = 0) uniform uniformBuffer {
 	mat4 model;

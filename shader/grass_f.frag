@@ -10,5 +10,8 @@ layout (location = 0) out vec4 fragcolor;
 
 void main() {
 	vec4 raw = texture(tex, uv);
+	if (raw.a == 0.0) {
+		discard;
+	}
 	fragcolor = raw;
 }

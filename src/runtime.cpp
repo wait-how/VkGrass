@@ -53,19 +53,23 @@ void appvk::updateUniformBuffer(uint32_t imageIndex) {
 
 // one grass section per triangle, centered on a vertex
 void appvk::initGrass(const vload::mesh& surf) {
-    grassMatBuf.resize(surf.verts.size() / 3);
+    grassMatBuf.resize(surf.verts.size());
 
     size_t j = 0;
-    const unsigned int density = 3; // density of grass sections
+    const unsigned int density = 1; // density of grass sections
     for (size_t i = 0; i < surf.verts.size(); i += density) {
+        if (j >= grassMatBuf.size()) {
+            break;
+        }
+
         glm::vec3 p0 = surf.verts[i].pos;
         glm::vec3 n = surf.verts[i].normal;
-        glm::mat4 temp;
+        glm::mat4 temp = glm::mat4(1.0f);
         temp = glm::translate(temp, p0);
 
-        // todo: is this rotation correct?
-        temp = glm::rotate(temp, atan2f(n.x, n.y), glm::vec3(0.0f, 0.0f, 1.0f));
-        temp = glm::rotate(temp, atan2f(n.z, n.y), glm::vec3(1.0f, 0.0f, 0.0f));
+        // TODO: rotation is wrong
+        //temp = glm::rotate(temp, atan2f(n.x, n.y), glm::vec3(0.0f, 0.0f, 1.0f));
+        //temp = glm::rotate(temp, atan2f(n.z, n.y), glm::vec3(1.0f, 0.0f, 0.0f));
         grassMatBuf[j++] = temp;
     }
 }

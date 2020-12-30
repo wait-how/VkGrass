@@ -21,14 +21,18 @@ void appvk::recreateSwapChain() {
 	createFramebuffers();
 	createUniformBuffers();
 	createDescriptorPool();
-	allocDescriptorSets();
-	allocRenderCmdBuffers(numIndices);
+	allocDescriptorSets(terrainSet);
+	allocDescriptorSets(grassSet);
+	allocDescriptorSetTexture(terrainSet, terrainSamp, terrainView);
+	allocDescriptorSetTexture(grassSet, grassSamp, grassView);
+	allocRenderCmdBuffers();
 	createSyncs();
 }
 
 appvk::appvk() : c(0.0f, 1.61833f, -9.76423f) {
 	createWindow();
-	//glfwSetInputMode(w, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+	// glfwSetInputMode(w, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+
 	createInstance();
 	if (debug) {
 		setupDebugMessenger();
@@ -50,21 +54,22 @@ appvk::appvk() : c(0.0f, 1.61833f, -9.76423f) {
 	createFramebuffers();
 	
 	std::string_view terrainPath = "models/hills.obj";
-	vload::vloader t(terrainPath);
+	vload::vloader t(terrainPath, true);
 	cout << "loaded model " << terrainPath << "\n";
 
-	std::string_view grassPath = "models/star-quad.obj";
-	vload::vloader g(grassPath);
+	std::string_view grassPath = "models/vertical-quad.obj";
+	vload::vloader g(grassPath, false);
 	cout << "loaded model " << grassPath << "\n";
 	
 	std::tie(terrainVertBuf, terrainVertMem) = createVertexBuffer(t.meshList[0].verts);
 	std::tie(terrainIndBuf, terrainIndMem) = createIndexBuffer(t.meshList[0].indices);
 
 	std::tie(grassVertBuf, grassVertMem) = createVertexBuffer(g.meshList[0].verts);
+	//std::tie(grassIndBuf, grassIndMem) = createIndexBuffer(g.meshList[0].indices);
 
 	initGrass(t.meshList[0]);
 	auto bytePtr = reinterpret_cast<uint8_t*>(grassMatBuf.data());
-	auto byteVec = std::vector(bytePtr, bytePtr + grassMatBuf.size() * sizeof(glm::mat4));
+	std::vector<uint8_t> byteVec(bytePtr, bytePtr + grassMatBuf.size() * sizeof(glm::mat4));
 
 	std::tie(grassVertInstBuf, grassVertInstMem) = createVertexBuffer(byteVec);
 
@@ -83,10 +88,17 @@ appvk::appvk() : c(0.0f, 1.61833f, -9.76423f) {
 	createUniformBuffers();
 	createDescriptorPool();
 	
-	allocDescriptorSets();
+	allocDescriptorSets(terrainSet);
+	allocDescriptorSets(grassSet);
 
-	numIndices = t.meshList[0].indices.size();
-	allocRenderCmdBuffers(numIndices);
+	allocDescriptorSetTexture(terrainSet, terrainSamp, terrainView);
+	allocDescriptorSetTexture(grassSet, grassSamp, grassView);
+
+	terrainIndices = t.meshList[0].indices.size();
+	grassVertices = g.meshList[0].verts.size();
+	grassInstances = grassMatBuf.size();
+	grassIndices = g.meshList[0].indices.size();
+	allocRenderCmdBuffers();
 
 	createSyncs();
 }
