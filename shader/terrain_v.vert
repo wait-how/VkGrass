@@ -1,14 +1,11 @@
 #version 460
-// use GL_EXT_shader_explicit_arithmetic_types for float16
-
 // NDCs are (-1, -1) in top left to (1, 1) in bottom right
 // right handed system, -Y is up normally but I flipped the rasterizer
 // depth goes from 0 to 1 as object gets farther away
 
-layout (location = 0) in vec3 position;
-layout (location = 1) in vec3 normal;
-layout (location = 2) in vec2 texcoord;
-layout (location = 3) in vec3 tangent;
+layout (binding = 0, location = 0) in vec3 position;
+layout (binding = 0, location = 1) in vec3 normal;
+layout (binding = 0, location = 2) in vec2 texcoord;
 
 layout (set = 0, binding = 0) uniform uniformBuffer {
 	mat4 model;

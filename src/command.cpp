@@ -85,13 +85,13 @@ void appvk::allocRenderCmdBuffers(uint32_t numIndices) {
         // actually render stuff!
         // commands here respect submission order, but draw command pipeline stages can go out of order
         vkCmdBeginRenderPass(commandBuffers[i], &rBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-        vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, gpipe);
+        vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, terrainPipe);
 
         VkDeviceSize offsets[] = { 0 };
 
-        vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, &vertexBuffer, offsets);
-        vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-        vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeLayout, 0, 1, &dSet[i], 0, nullptr);
+        vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, &terrainVertBuf, offsets);
+        vkCmdBindIndexBuffer(commandBuffers[i], terrainIndBuf, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, terrainPipeLayout, 0, 1, &dSet[i], 0, nullptr);
         vkCmdDrawIndexed(commandBuffers[i], numIndices, 1, 0, 0, 0);
         vkCmdEndRenderPass(commandBuffers[i]);
         

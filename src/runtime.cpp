@@ -1,6 +1,8 @@
 #include <chrono>
 #include <cmath>
 
+#include "vloader.h"
+
 #include "main.h"
 
 void appvk::createSyncs() {
@@ -35,8 +37,6 @@ void appvk::updateUniformBuffer(uint32_t imageIndex) {
 
     time = 0;
 
-    // TODO: flip Y axis on .obj models, since the format assumes +Y is up.
-
     ubo u;
     u.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     u.model = glm::rotate(u.model, time * glm::radians(25.0f), glm::vec3(0.0, 0.0, 1.0));
@@ -51,3 +51,21 @@ void appvk::updateUniformBuffer(uint32_t imageIndex) {
     vkUnmapMemory(dev, uniformMemories[imageIndex]);
 }
 
+// one grass section per triangle, centered on a vertex
+void appvk::initGrass(const vload::mesh& surf) {
+    grassMatBuf.resize(surf.verts.size() / 3);
+
+    size_t j = 0;
+    const unsigned int density = 3; // density of grass sections
+    for (size_t i = 0; i < surf.verts.size(); i += density) {
+        glm::vec3 p0 = surf.verts[i].pos;
+        glm::vec3 n = surf.verts[i].normal;
+        glm::mat4 temp;
+        temp = glm::translate(temp, p0);
+
+        // todo: is this rotation correct?
+        temp = glm::rotate(temp, atan2f(n.x, n.y), glm::vec3(0.0f, 0.0f, 1.0f));
+        temp = glm::rotate(temp, atan2f(n.z, n.y), glm::vec3(1.0f, 0.0f, 0.0f));
+        grassMatBuf[j++] = temp;
+    }
+}

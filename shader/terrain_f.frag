@@ -18,7 +18,7 @@ vec3 phong(in point l, in vec3 c) {
 	
 	float dist = length(ldir);
 
-	const vec3 cf = vec3(0.0, 1.0, 0.0);
+	const vec3 cf = vec3(1.0, 0.0, 0.0);
 	float falloff = cf.x + (cf.y / dist) + (cf.z / (dist * dist));
 	ldir /= dist;
 
@@ -51,7 +51,7 @@ vec3 fog(in float start, in float end, in vec3 c) {
 
 void main() {
 
-	const point l = point(vec3(0.0, 2.0, -2.0), vec3(1.0));
+	const point l = point(vec3(0.0, 10.0, -12.0), vec3(0.5));
 
 	vec3 c = texture(tex, uv).rgb;
 

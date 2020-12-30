@@ -8,6 +8,7 @@
 #include <optional> // C++17, for device queue querying
 #include <set>
 #include <array> // for returning arrays of things
+#include <utility> // for std::pair
 
 #include <cstring> // for strcmp
 
@@ -20,11 +21,11 @@ using std::cerr;
 
 class appvk {
 public:
-	void run() {
-		init();
-		loop();
-		cleanup();
-	}
+
+	appvk();
+	~appvk();
+
+	void run();
 
 private:
 
@@ -145,8 +146,10 @@ private:
 	std::vector<char> readFile(const std::string& path);
     VkShaderModule createShaderModule(const std::vector<char>& spv);
 	
-	VkPipelineLayout pipeLayout = VK_NULL_HANDLE;
-	VkPipeline gpipe = VK_NULL_HANDLE;
+	VkPipelineLayout terrainPipeLayout = VK_NULL_HANDLE;
+	VkPipeline terrainPipe = VK_NULL_HANDLE;
+
+	VkPipeline grassPipe = VK_NULL_HANDLE;
 	void createGraphicsPipeline();
 
 	bool printed = false;
@@ -170,25 +173,36 @@ private:
     void copyBufferToImage(VkBuffer buf, VkImage img, uint32_t width, uint32_t height);
     void copyBuffer(VkBuffer src, VkBuffer dst, VkDeviceSize size);
 
-	VkBuffer stagingBuffer = VK_NULL_HANDLE;
-	VkDeviceMemory stagingMemory = VK_NULL_HANDLE;
+	VkBuffer terrainVertBuf = VK_NULL_HANDLE;
+	VkDeviceMemory terrainVertMem = VK_NULL_HANDLE;
 
-	VkBuffer vertexBuffer = VK_NULL_HANDLE;
-	VkDeviceMemory vertexMemory = VK_NULL_HANDLE;
-    void createVertexBuffer(const std::vector<vload::vertex>& verts);
+	VkBuffer grassVertBuf = VK_NULL_HANDLE;
+	VkDeviceMemory grassVertMem = VK_NULL_HANDLE;
 
-	VkBuffer indexBuffer = VK_NULL_HANDLE;
-	VkDeviceMemory indexMemory = VK_NULL_HANDLE;
-    void createIndexBuffer(const std::vector<uint32_t>& indices);
+	VkBuffer grassVertInstBuf = VK_NULL_HANDLE;
+	VkDeviceMemory grassVertInstMem = VK_NULL_HANDLE;
 
-	VkImage texImage = VK_NULL_HANDLE;
-	VkDeviceMemory texMem = VK_NULL_HANDLE;
-    VkImageView texView = VK_NULL_HANDLE;
-	VkSampler texSamp = VK_NULL_HANDLE;
-	unsigned int texMipLevels;
-	void createTextureImage(std::string_view path);
+    std::pair<VkBuffer, VkDeviceMemory> createVertexBuffer(std::vector<vload::vertex>& v);
+	std::pair<VkBuffer, VkDeviceMemory> createVertexBuffer(const std::vector<uint8_t>& verts);
 
-    void createSampler();
+	VkBuffer terrainIndBuf = VK_NULL_HANDLE;
+	VkDeviceMemory terrainIndMem = VK_NULL_HANDLE;
+    std::pair<VkBuffer, VkDeviceMemory> createIndexBuffer(const std::vector<uint32_t>& indices);
+
+	VkImage terrainImage = VK_NULL_HANDLE;
+	VkDeviceMemory terrainMem = VK_NULL_HANDLE;
+    VkImageView terrainView = VK_NULL_HANDLE;
+	VkSampler terrainSamp = VK_NULL_HANDLE;
+	unsigned int terrainMipLevels;
+
+	VkImage grassImage = VK_NULL_HANDLE;
+	VkDeviceMemory grassMem = VK_NULL_HANDLE;
+    VkImageView grassView = VK_NULL_HANDLE;
+	VkSampler grassSamp = VK_NULL_HANDLE;
+	unsigned int grassMipLevels;
+	std::tuple<VkImage, VkDeviceMemory, unsigned int> createTextureImage(std::string_view path);
+
+    VkSampler createSampler(unsigned int mipLevels);
 	void generateMipmaps(VkImage image, VkFormat format, unsigned int width, unsigned int height, unsigned int levels);
 
 	VkImage depthImage = VK_NULL_HANDLE;
@@ -216,19 +230,19 @@ private:
 
 	uint32_t numIndices = 0;
 
-    void init();
     void recreateSwapChain();
 
 	// this scene is set up so that the camera is in -Z looking towards +Z.
     cam::camera c;
-	glm::vec3 cpos = glm::vec3(0.0, 0.0, -3.0);
+
+	std::vector<glm::mat4> grassMatBuf;
+	void initGrass(const vload::mesh& surf);
 	
     void updateUniformBuffer(uint32_t imageIndex);
 
 	size_t currFrame = 0;
 
 	void drawFrame();
-    void loop();
 
     void cleanupSwapChain();
     void cleanup();

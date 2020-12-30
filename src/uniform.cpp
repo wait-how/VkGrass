@@ -76,8 +76,8 @@ void appvk::allocDescriptorSets() {
         bufferInfo.range = sizeof(ubo);
 
         VkDescriptorImageInfo imageInfo{};
-        imageInfo.sampler = texSamp;
-        imageInfo.imageView = texView;
+        imageInfo.sampler = terrainSamp;
+        imageInfo.imageView = terrainView;
         imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
         VkWriteDescriptorSet sets[2] = {};

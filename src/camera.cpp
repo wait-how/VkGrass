@@ -5,7 +5,7 @@
 
 namespace cam {
 
-	camera::camera(glm::vec3 inPos) : pos(inPos), hangle(90.0f), vangle(0.0f), skip(0), prevX(0.0), prevY(0.0), mscale(1), lscale(1) {
+	camera::camera(const float pos_x, const float pos_y, const float pos_z) : pos(glm::vec3(pos_x, pos_y, pos_z)), hangle(90.0f), vangle(0.0f), skip(0), prevX(0.0), prevY(0.0), mscale(1), lscale(1) {
 		prevTime = glfwGetTime();
 	}
 

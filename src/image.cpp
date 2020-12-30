@@ -155,7 +155,7 @@ void appvk::createImage(unsigned int width, unsigned int height, VkFormat format
     vkBindImageMemory(dev, image, imageMemory, 0);
 }
 
-void appvk::createSampler() {
+VkSampler appvk::createSampler(unsigned int mipLevels) {
     VkSamplerCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
     createInfo.magFilter = VK_FILTER_LINEAR;
@@ -168,11 +168,14 @@ void appvk::createSampler() {
     createInfo.maxAnisotropy = 16.0f;
     createInfo.compareEnable = VK_FALSE;
     createInfo.minLod = 0.0f;
-    createInfo.maxLod = texMipLevels;
+    createInfo.maxLod = mipLevels;
 
-    if (vkCreateSampler(dev, &createInfo, nullptr, &texSamp) != VK_SUCCESS) {
+    VkSampler samp;
+    if (vkCreateSampler(dev, &createInfo, nullptr, &samp) != VK_SUCCESS) {
         throw std::runtime_error("cannot create sampler!");
     }
+
+    return samp;
 }
 
 void appvk::generateMipmaps(VkImage image, VkFormat format, unsigned int width, unsigned int height, unsigned int levels) {

@@ -26,7 +26,7 @@ void appvk::recreateSwapChain() {
 	createSyncs();
 }
 
-void appvk::init() {
+appvk::appvk() : c(0.0f, 1.61833f, -9.76423f) {
 	createWindow();
 	//glfwSetInputMode(w, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 	createInstance();
@@ -34,7 +34,7 @@ void appvk::init() {
 		setupDebugMessenger();
 	}
 	createSurface();
-	pickPhysicalDevice(intel);
+	pickPhysicalDevice(nvidia);
 	createLogicalDevice();
 	
 	createSwapChain();
@@ -49,25 +49,45 @@ void appvk::init() {
 	createMultisampleImage();
 	createFramebuffers();
 	
-	std::string_view obj_path = "models/cube.obj";
-	vload::vloader v(obj_path);
-	cout << "loaded model " << obj_path << "\n";
-	
-	createVertexBuffer(v.meshList[0].verts);
-	createIndexBuffer(v.meshList[0].indices);
+	std::string_view terrainPath = "models/hills.obj";
+	vload::vloader t(terrainPath);
+	cout << "loaded model " << terrainPath << "\n";
 
-	std::string_view grass_path = "textures/grass/grass02 diffuse 1k.jpg";
-	createTextureImage(grass_path);
-	cout << "loaded texture " << grass_path << "\n";
-	texView = createImageView(texImage, VK_FORMAT_R8G8B8A8_SRGB, texMipLevels, VK_IMAGE_ASPECT_COLOR_BIT);
-	createSampler();
+	std::string_view grassPath = "models/star-quad.obj";
+	vload::vloader g(grassPath);
+	cout << "loaded model " << grassPath << "\n";
 	
-	numIndices = v.meshList[0].indices.size();
+	std::tie(terrainVertBuf, terrainVertMem) = createVertexBuffer(t.meshList[0].verts);
+	std::tie(terrainIndBuf, terrainIndMem) = createIndexBuffer(t.meshList[0].indices);
+
+	std::tie(grassVertBuf, grassVertMem) = createVertexBuffer(g.meshList[0].verts);
+
+	initGrass(t.meshList[0]);
+	auto bytePtr = reinterpret_cast<uint8_t*>(grassMatBuf.data());
+	auto byteVec = std::vector(bytePtr, bytePtr + grassMatBuf.size() * sizeof(glm::mat4));
+
+	std::tie(grassVertInstBuf, grassVertInstMem) = createVertexBuffer(byteVec);
+
+	std::string_view terrainFloor = "textures/floor-diffuse-1k.jpg";
+	std::tie(terrainImage, terrainMem, terrainMipLevels) = createTextureImage(terrainFloor);
+	cout << "loaded texture " << terrainFloor << "\n";
+	terrainView = createImageView(terrainImage, VK_FORMAT_R8G8B8A8_SRGB, terrainMipLevels, VK_IMAGE_ASPECT_COLOR_BIT);
+	terrainSamp = createSampler(terrainMipLevels);
+
+	std::string_view grassTex = "textures/grass-billboard.png";
+	std::tie(grassImage, grassMem, grassMipLevels) = createTextureImage(grassTex);
+	cout << "loaded texture " << grassTex << "\n";
+	grassView = createImageView(grassImage, VK_FORMAT_R8G8B8A8_SRGB, grassMipLevels, VK_IMAGE_ASPECT_COLOR_BIT);
+	grassSamp = createSampler(grassMipLevels);
+
 	createUniformBuffers();
 	createDescriptorPool();
 	
 	allocDescriptorSets();
+
+	numIndices = t.meshList[0].indices.size();
 	allocRenderCmdBuffers(numIndices);
+
 	createSyncs();
 }
 
@@ -143,9 +163,12 @@ void appvk::drawFrame() {
 	currFrame = (currFrame + 1) % framesInFlight;
 }
 
-void appvk::loop() {
+void appvk::run() {
 	while (!glfwWindowShouldClose(w)) {
 		glfwPollEvents();
+		if (glfwGetKey(w, GLFW_KEY_I) == GLFW_PRESS) {
+			std::cout << "\tcamera position: (" << c.pos.x << ", " << c.pos.y << ", " << c.pos.z << ")\n";
+		}
 		c.update(w);
 		drawFrame();
 		

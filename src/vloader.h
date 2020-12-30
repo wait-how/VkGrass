@@ -8,7 +8,7 @@
 #include "glm_wrapper.h"
 
 namespace vload {
-	struct vertex {
+	struct alignas(64) vertex {
 		// aligning things is a little less space-efficient, but makes offsets easier.
 		alignas(16) glm::vec3 pos;
 		alignas(16) glm::vec3 normal;

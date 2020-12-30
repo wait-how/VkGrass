@@ -98,22 +98,22 @@ void appvk::createRenderPass() {
 }
 
 void appvk::createGraphicsPipeline() {
-    std::vector<char> vertspv = readFile("shader/vert.spv");
-    std::vector<char> fragspv = readFile("shader/frag.spv");
+    std::vector<char> terrainvspv = readFile("shader/terrain_v.spv");
+    std::vector<char> terrainfspv = readFile("shader/terrain_f.spv");
 
-    VkShaderModule vmod = createShaderModule(vertspv);
-    VkShaderModule fmod = createShaderModule(fragspv);
+    VkShaderModule terrainv = createShaderModule(terrainvspv);
+    VkShaderModule terrainf = createShaderModule(terrainfspv);
 
     VkPipelineShaderStageCreateInfo shaders[2] = {};
     
     shaders[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     shaders[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
-    shaders[0].module = vmod;
+    shaders[0].module = terrainv;
     shaders[0].pName = "main";
     
     shaders[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     shaders[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-    shaders[1].module = fmod;
+    shaders[1].module = terrainf;
     shaders[1].pName = "main";
     
     VkVertexInputBindingDescription bindDesc;
@@ -121,8 +121,8 @@ void appvk::createGraphicsPipeline() {
     bindDesc.stride = sizeof(vload::vertex);
     bindDesc.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-    VkVertexInputAttributeDescription attrDesc[4];
-    for (size_t i = 0; i < 4; i++) {
+    VkVertexInputAttributeDescription attrDesc[3];
+    for (size_t i = 0; i < 3; i++) {
         attrDesc[i].location = i;
         attrDesc[i].binding = 0;
         attrDesc[i].offset = 16 * i; // all offsets are rounded up to 16 bytes due to alignas
@@ -131,13 +131,12 @@ void appvk::createGraphicsPipeline() {
     attrDesc[0].format = VK_FORMAT_R32G32B32_SFLOAT;
     attrDesc[1].format = VK_FORMAT_R32G32B32_SFLOAT;
     attrDesc[2].format = VK_FORMAT_R32G32_SFLOAT;
-    attrDesc[3].format = VK_FORMAT_R32G32B32_SFLOAT;
     
     VkPipelineVertexInputStateCreateInfo vinCreateInfo{};
     vinCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     vinCreateInfo.vertexBindingDescriptionCount = 1;
     vinCreateInfo.pVertexBindingDescriptions = &bindDesc;
-    vinCreateInfo.vertexAttributeDescriptionCount = 4;
+    vinCreateInfo.vertexAttributeDescriptionCount = 3;
     vinCreateInfo.pVertexAttributeDescriptions = attrDesc;
 
     VkPipelineInputAssemblyStateCreateInfo inAsmCreateInfo{};
@@ -210,7 +209,7 @@ void appvk::createGraphicsPipeline() {
     pipeLayoutCreateInfo.setLayoutCount = 1;
     pipeLayoutCreateInfo.pSetLayouts = &dSetLayout;
 
-    if (vkCreatePipelineLayout(dev, &pipeLayoutCreateInfo, nullptr, &pipeLayout) != VK_SUCCESS) {
+    if (vkCreatePipelineLayout(dev, &pipeLayoutCreateInfo, nullptr, &terrainPipeLayout) != VK_SUCCESS) {
         throw std::runtime_error("cannot create pipeline layout!");
     }
 
@@ -221,20 +220,21 @@ void appvk::createGraphicsPipeline() {
         pipeCreateInfo.flags = VK_PIPELINE_CREATE_CAPTURE_STATISTICS_BIT_KHR;
     }
     
+    pipeCreateInfo.flags = VK_PIPELINE_CREATE_ALLOW_DERIVATIVES_BIT;
     pipeCreateInfo.stageCount = 2;
     pipeCreateInfo.pStages = shaders;
     pipeCreateInfo.pVertexInputState = &vinCreateInfo;
     pipeCreateInfo.pInputAssemblyState = &inAsmCreateInfo;
     pipeCreateInfo.pViewportState = &viewCreateInfo;
     pipeCreateInfo.pRasterizationState = &rasterCreateInfo;
-    pipeCreateInfo.pMultisampleState = &msCreateInfo;
+    pipeCreateInfo.pMultisampleState = &msCreateInfo;https://www.khronos.org/registry/vulkan/specs/1.2-extensions/html/vkspec.html#VUID-VkPipelineVertexInputStateCreateInfo-pVertexBindingDescript
     pipeCreateInfo.pDepthStencilState = &dCreateInfo;
     pipeCreateInfo.pColorBlendState = &colorCreateInfo;
-    pipeCreateInfo.layout = pipeLayout; // handle, not a struct.
+    pipeCreateInfo.layout = terrainPipeLayout; // handle, not a struct.
     pipeCreateInfo.renderPass = renderPass;
     pipeCreateInfo.subpass = 0;
     
-    if (vkCreateGraphicsPipelines(dev, VK_NULL_HANDLE, 1, &pipeCreateInfo, nullptr, &gpipe) != VK_SUCCESS) {
+    if (vkCreateGraphicsPipelines(dev, VK_NULL_HANDLE, 1, &pipeCreateInfo, nullptr, &terrainPipe) != VK_SUCCESS) {
         throw std::runtime_error("cannot create graphics pipeline!");
     }
 
@@ -243,8 +243,99 @@ void appvk::createGraphicsPipeline() {
         printed = true; // prevent stats from being printed again if we recreate the pipeline
     }
     
-    vkDestroyShaderModule(dev, vmod, nullptr); // we can destroy shader modules once the graphics pipeline is created.
-    vkDestroyShaderModule(dev, fmod, nullptr);
+    vkDestroyShaderModule(dev, terrainv, nullptr); // we can destroy shader modules once the graphics pipeline is created.
+    vkDestroyShaderModule(dev, terrainf, nullptr);
+
+    // creating grass pipeline from same struct since almost everything is the same
+    std::vector<char> grassvspv = readFile("shader/grass_v.spv");
+    std::vector<char> grassfspv = readFile("shader/grass_f.spv");
+
+    VkShaderModule grassv = createShaderModule(grassvspv);
+    VkShaderModule grassf = createShaderModule(grassfspv);
+
+    VkPipelineShaderStageCreateInfo grassShaders[2] = {};
+
+    grassShaders[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    grassShaders[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+    grassShaders[0].module = grassv;
+    grassShaders[0].pName = "main";
+
+    grassShaders[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    grassShaders[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+    grassShaders[1].module = grassf;
+    grassShaders[1].pName = "main";
+
+    VkVertexInputBindingDescription bindDesc2[2];
+    bindDesc2[0] = bindDesc;
+
+    bindDesc2[1].binding = 1;
+    bindDesc2[1].stride = sizeof(glm::mat4);
+    bindDesc2[1].inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
+
+    VkVertexInputAttributeDescription attrDesc2[7];
+    for (size_t i = 0; i < 3; i++) {
+        attrDesc2[i] = attrDesc[i];
+    }
+
+    // mat4 requires four slots in vertex shader
+    for (size_t i = 3; i < 7; i++) {
+        attrDesc2[i].binding = 1;
+        attrDesc2[i].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+        attrDesc2[i].location = i;
+        attrDesc2[i].offset = sizeof(glm::vec4) * i; // NOTE: vertex inputs _have_ to be distinct even if they come from different binding points.
+    }
+
+    VkPipelineVertexInputStateCreateInfo vinCreateInfo2{};
+    vinCreateInfo2.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    vinCreateInfo2.vertexBindingDescriptionCount = 2;
+    vinCreateInfo2.pVertexBindingDescriptions = bindDesc2;
+    vinCreateInfo2.vertexAttributeDescriptionCount = 7;
+    vinCreateInfo2.pVertexAttributeDescriptions = attrDesc2;
+
+    VkPipelineColorBlendAttachmentState colorAttachment2{};
+    colorAttachment2.blendEnable = VK_TRUE;
+    colorAttachment2.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+    colorAttachment2.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+    colorAttachment2.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+    colorAttachment2.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+    colorAttachment2.colorBlendOp = VK_BLEND_OP_ADD;
+    colorAttachment2.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | 
+                                        VK_COLOR_COMPONENT_G_BIT | 
+                                        VK_COLOR_COMPONENT_B_BIT |
+                                        VK_COLOR_COMPONENT_A_BIT;
+    
+    VkPipelineColorBlendStateCreateInfo colorCreateInfo2{};
+    colorCreateInfo2.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+    colorCreateInfo2.logicOpEnable = VK_FALSE;
+    colorCreateInfo2.attachmentCount = 1;
+    colorCreateInfo2.pAttachments = &colorAttachment2;
+
+    VkPipelineRasterizationStateCreateInfo rasterCreateInfo2{};
+    rasterCreateInfo2.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+    rasterCreateInfo2.depthClampEnable = VK_FALSE;
+    rasterCreateInfo2.rasterizerDiscardEnable = VK_FALSE;
+    rasterCreateInfo2.polygonMode = VK_POLYGON_MODE_FILL;
+    rasterCreateInfo2.cullMode = VK_CULL_MODE_NONE;
+    rasterCreateInfo2.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+    rasterCreateInfo2.depthBiasEnable = VK_FALSE;
+    rasterCreateInfo2.lineWidth = 1.0f;
+
+    pipeCreateInfo.basePipelineHandle = terrainPipe;
+    pipeCreateInfo.basePipelineIndex = -1;
+    pipeCreateInfo.flags = VK_PIPELINE_CREATE_DERIVATIVE_BIT;
+    pipeCreateInfo.pStages = grassShaders;
+    pipeCreateInfo.pVertexInputState = &vinCreateInfo2;
+    pipeCreateInfo.pRasterizationState = &rasterCreateInfo2;
+    pipeCreateInfo.pColorBlendState = &colorCreateInfo2;
+    pipeCreateInfo.layout = terrainPipeLayout;
+    // render pass is the same
+    
+    if (vkCreateGraphicsPipelines(dev, VK_NULL_HANDLE, 1, &pipeCreateInfo, nullptr, &grassPipe) != VK_SUCCESS) {
+        throw std::runtime_error("cannot create graphics pipeline!");
+    }
+
+    vkDestroyShaderModule(dev, grassv, nullptr);
+    vkDestroyShaderModule(dev, grassf, nullptr);
 }
 
 void appvk::createFramebuffers() {
@@ -275,60 +366,85 @@ void appvk::createFramebuffers() {
     }
 }
 
-void appvk::createVertexBuffer(const std::vector<vload::vertex>& verts) {
-    VkDeviceSize bufferSize = verts.size() * sizeof(vload::vertex);
-    createBuffer(verts.size() * sizeof(vload::vertex), 
+std::pair<VkBuffer, VkDeviceMemory> appvk::createVertexBuffer(const std::vector<uint8_t>& verts) {
+    VkBuffer vertexBuf;
+    VkDeviceMemory vertexMem;
+
+    VkBuffer stagingBuf;
+    VkDeviceMemory stagingMem;
+
+    VkDeviceSize bufferSize = verts.size();
+    createBuffer(verts.size(), 
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
-        stagingBuffer, stagingMemory);
+        stagingBuf, stagingMem);
     
-    createBuffer(verts.size() * sizeof(vload::vertex), 
+    createBuffer(verts.size(), 
         VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
-        vertexBuffer, vertexMemory);
+        vertexBuf, vertexMem);
 
     void *data;
-    vkMapMemory(dev, stagingMemory, 0, bufferSize, 0, &data);
+    vkMapMemory(dev, stagingMem, 0, bufferSize, 0, &data);
     memcpy(data, verts.data(), bufferSize);
-    vkUnmapMemory(dev, stagingMemory);
+    vkUnmapMemory(dev, stagingMem);
 
-    copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
+    copyBuffer(stagingBuf, vertexBuf, bufferSize);
 
-    vkFreeMemory(dev, stagingMemory, nullptr);
-    vkDestroyBuffer(dev, stagingBuffer, nullptr);
+    vkFreeMemory(dev, stagingMem, nullptr);
+    vkDestroyBuffer(dev, stagingBuf, nullptr);
+
+    return std::pair(vertexBuf, vertexMem);
 }
 
-void appvk::createIndexBuffer(const std::vector<uint32_t>& indices) {
+// wrapper for raw createVertexBuffer that takes a vloader mesh
+std::pair<VkBuffer, VkDeviceMemory> appvk::createVertexBuffer(std::vector<vload::vertex>& v) {
+    auto bytePtr = reinterpret_cast<uint8_t*>(v.data());
+	std::vector<uint8_t> byteData(bytePtr, bytePtr + v.size() * sizeof(vload::vertex));
+
+    return createVertexBuffer(byteData);
+}
+
+
+std::pair<VkBuffer, VkDeviceMemory> appvk::createIndexBuffer(const std::vector<uint32_t>& indices) {
+    VkBuffer indexBuf;
+    VkDeviceMemory indexMem;
+    
+    VkBuffer stagingBuf;
+    VkDeviceMemory stagingMem;
+    
     VkDeviceSize bufferSize = indices.size() * sizeof(uint32_t);
 
     createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-    stagingBuffer, stagingMemory);
+    stagingBuf, stagingMem);
 
     createBuffer(bufferSize,
     VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-    indexBuffer, indexMemory);
+    indexBuf, indexMem);
 
     void *data;
-    vkMapMemory(dev, stagingMemory, 0, bufferSize, 0, &data);
+    vkMapMemory(dev, stagingMem, 0, bufferSize, 0, &data);
     memcpy(data, indices.data(), bufferSize);
-    vkUnmapMemory(dev, stagingMemory);
+    vkUnmapMemory(dev, stagingMem);
 
-    copyBuffer(stagingBuffer, indexBuffer, bufferSize);
+    copyBuffer(stagingBuf, indexBuf, bufferSize);
 
-    vkFreeMemory(dev, stagingMemory, nullptr);
-    vkDestroyBuffer(dev, stagingBuffer, nullptr);
+    vkFreeMemory(dev, stagingMem, nullptr);
+    vkDestroyBuffer(dev, stagingBuf, nullptr);
+
+    return std::pair(indexBuf, indexMem);
 }
 
-void appvk::createTextureImage(std::string_view path) {
+std::tuple<VkImage, VkDeviceMemory, unsigned int> appvk::createTextureImage(std::string_view path) {
     int width, height, chans;
     unsigned char *data = stbi_load(path.data(), &width, &height, &chans, STBI_rgb_alpha);
     if (!data) {
         throw std::runtime_error("cannot load texture!");
     }
 
-    texMipLevels = floor(log2(std::max(width, height))) + 1;
+    unsigned int mipLevels = floor(log2(std::max(width, height))) + 1;
     
     VkDeviceSize imageSize = width * height * 4;
 
@@ -347,21 +463,26 @@ void appvk::createTextureImage(std::string_view path) {
 
     stbi_image_free(data);
 
+    VkImage texImage;
+    VkDeviceMemory texMem;
+
     // used as a src when blitting to make mipmaps
-    createImage(width, height, VK_FORMAT_R8G8B8A8_SRGB, texMipLevels, VK_SAMPLE_COUNT_1_BIT,
+    createImage(width, height, VK_FORMAT_R8G8B8A8_SRGB, mipLevels, VK_SAMPLE_COUNT_1_BIT,
         VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
         VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
         texImage, texMem);
     
-    transitionImageLayout(texImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, texMipLevels);
+    transitionImageLayout(texImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels);
     copyBufferToImage(sbuf, texImage, uint32_t(width), uint32_t(height));
 
     vkFreeMemory(dev, smem, nullptr);
     vkDestroyBuffer(dev, sbuf, nullptr);
 
-    generateMipmaps(texImage, VK_FORMAT_R8G8B8A8_SRGB, width, height, texMipLevels);
+    generateMipmaps(texImage, VK_FORMAT_R8G8B8A8_SRGB, width, height, mipLevels);
+
+    return std::tuple(texImage, texMem, mipLevels);
 }
 
 void appvk::createDepthImage() {

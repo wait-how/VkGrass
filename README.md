@@ -17,10 +17,14 @@ Runtime deps (listed as arch packages):
  - glfw
 
 TODO:
-0. create 3D models
-1. Render hills
 2. Render grass
-  - get OIT working
-  - Use "blended OIT" since alphas are zero and colors are similar!
+  - render instances of grass all over the hills
+  - use tesselation shader for lod'ing things if required
+  - use alpha to get grass to overlap
+  - get grass to move from wind
 3. Render skybox
 4. Render sun
+
+Credits:
+Grass billboard texture: [Reiner “Tiles” Prokein](https://www.reinerstilesets.de/graphics/lizenz/)
+Everything else: me

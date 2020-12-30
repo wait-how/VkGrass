@@ -41,7 +41,7 @@ void appvk::printShaderStats() {
 
     VkPipelineInfoKHR pipeInfo{};
     pipeInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INFO_KHR;
-    pipeInfo.pipeline = gpipe;
+    pipeInfo.pipeline = terrainPipe;
 
     unsigned int numShaders;
     if (GetPipelineExecutablePropertiesKHR(dev, &pipeInfo, &numShaders, nullptr) != VK_SUCCESS) {
@@ -55,7 +55,7 @@ void appvk::printShaderStats() {
     
     VkPipelineExecutableInfoKHR shaderInfo{};
     shaderInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_EXECUTABLE_INFO_KHR;
-    shaderInfo.pipeline = gpipe;
+    shaderInfo.pipeline = terrainPipe;
     
     unsigned int numStats;
     GetPipelineExecutableStatisticsKHR(dev, &shaderInfo, &numStats, nullptr);

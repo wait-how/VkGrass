@@ -306,7 +306,7 @@ void appvk::createLogicalDevice() {
     vkGetDeviceQueue(dev, *(qi.graphics), 0, &gQueue); // creating a device also creates queues for it
 }
 
-void appvk::cleanup() {
+appvk::~appvk() {
 
     cleanupSwapChain();
 
@@ -314,16 +314,27 @@ void appvk::cleanup() {
 
     vkDestroyCommandPool(dev, cp, nullptr);
 
-    vkDestroySampler(dev, texSamp, nullptr);
-    vkDestroyImageView(dev, texView, nullptr);
-    vkFreeMemory(dev, texMem, nullptr);
-    vkDestroyImage(dev, texImage, nullptr);
+    vkDestroySampler(dev, terrainSamp, nullptr);
+    vkDestroyImageView(dev, terrainView, nullptr);
+    vkFreeMemory(dev, terrainMem, nullptr);
+    vkDestroyImage(dev, terrainImage, nullptr);
 
-    vkFreeMemory(dev, indexMemory, nullptr);
-    vkDestroyBuffer(dev, indexBuffer, nullptr);
+    vkDestroySampler(dev, grassSamp, nullptr);
+    vkDestroyImageView(dev, grassView, nullptr);
+    vkFreeMemory(dev, grassMem, nullptr);
+    vkDestroyImage(dev, grassImage, nullptr);
 
-    vkFreeMemory(dev, vertexMemory, nullptr);
-    vkDestroyBuffer(dev, vertexBuffer, nullptr);
+    vkFreeMemory(dev, terrainIndMem, nullptr);
+    vkDestroyBuffer(dev, terrainIndBuf, nullptr);
+
+    vkFreeMemory(dev, terrainVertMem, nullptr);
+    vkDestroyBuffer(dev, terrainVertBuf, nullptr);
+
+    vkFreeMemory(dev, grassVertMem, nullptr);
+    vkDestroyBuffer(dev, grassVertBuf, nullptr);
+
+    vkFreeMemory(dev, grassVertInstMem, nullptr);
+    vkDestroyBuffer(dev, grassVertInstBuf, nullptr);
 
     vkDestroyDevice(dev, nullptr);
     vkDestroySurfaceKHR(instance, surf, nullptr);

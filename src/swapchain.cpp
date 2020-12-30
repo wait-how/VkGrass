@@ -145,8 +145,9 @@ void appvk::cleanupSwapChain() {
         vkDestroyFramebuffer(dev, framebuffer, nullptr);
     }
 
-    vkDestroyPipeline(dev, gpipe, nullptr);
-    vkDestroyPipelineLayout(dev, pipeLayout, nullptr);
+    vkDestroyPipeline(dev, terrainPipe, nullptr);
+    vkDestroyPipeline(dev, grassPipe, nullptr);
+    vkDestroyPipelineLayout(dev, terrainPipeLayout, nullptr);
     vkDestroyRenderPass(dev, renderPass, nullptr);
     
     for (const auto& view : swapImageViews) {
