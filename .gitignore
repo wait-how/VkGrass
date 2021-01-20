@@ -1,5 +1,5 @@
-debug
-bench
+dbg
+opt
 space.code-workspace
 .dep
 .obj
