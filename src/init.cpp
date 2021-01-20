@@ -217,7 +217,7 @@ void appvk::checkChooseDevice(VkPhysicalDevice pd, manufacturer m) {
     
     if (correctm && correctf && pdev == VK_NULL_HANDLE) {
         pdev = pd;
-        msaaSamples = getSamples(2);
+        msaaSamples = getSamples(4);
         cout << " (selected)";
     }
 

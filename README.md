@@ -18,12 +18,17 @@ Runtime dependencies:
  - glfw
 
 TODO:
+0. Procedural terrain
+ - get normals and uvs working
 1. Render grass
   - Cull faraway objects on CPU
   - get grass to move from wind
   - why do I have to flip UVs for grass?
 2. Render skybox
 3. Render sun
+
+Bugs:
+- camera broken with optimization?
 
 Optimizations:
 1. Make one large memory alloc and break off chunks of it for buffers

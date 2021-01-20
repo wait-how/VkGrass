@@ -63,15 +63,14 @@ void appvk::initGrass(const std::vector<vformat::vertex>& verts, const std::vect
     }
 
     const size_t isize = indices.size();
-    const size_t size3 = isize - isize % 3;
-
+    
     // write mats for lerped positions using indices
-    for (size_t i = 0; i < size3; i += 3) {
+    for (size_t i = 0; i < isize; i += 3) {
         const glm::vec3 p0 = verts[indices[i]].pos;
         const glm::vec3 p1 = verts[indices[i + 1]].pos;
         const glm::vec3 p2 = verts[indices[i + 2]].pos;
         
         const glm::vec3 pl = glm::mix(glm::mix(p0, p1, 0.5f), p2, 0.5f);
-        grassMatBuf[mat_i++] = glm::translate(glm::mat4(1.0f), pl);
+        //grassMatBuf[mat_i++] = glm::translate(glm::mat4(1.0f), pl);
     }
 }

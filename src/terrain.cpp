@@ -1,7 +1,10 @@
 #include "terrain.hpp"
 
-terrain::terrain(unsigned int nwidth, unsigned int nheight, float xlim, float zlim, const features f) {
-
+terrain::terrain(unsigned int nwidth, unsigned int nheight, float xlim, float zlim, const uint8_t f) {
+    if (nwidth < 2 && nheight < 2) {
+        throw std::invalid_argument("terrain width and height must be >2!");
+    }
+    
     verts.reserve(nwidth * nheight);
     indices.reserve(6 * nwidth * nheight);
 
@@ -9,11 +12,8 @@ terrain::terrain(unsigned int nwidth, unsigned int nheight, float xlim, float zl
     float zstep = (zlim * 2) / nwidth;
 
     // write vertices
-    for (size_t xn = 0; xn < nwidth; xn++) {
-        for (size_t zn = 0; zn < nheight; zn++) {
-            const float xfscale = 0.1;
-            const float zfscale = 0.1;
-
+    for (size_t zn = 0; zn < nheight; zn++) {
+        for (size_t xn = 0; xn < nwidth; xn++) {
             /*
             scaling by small constants works because f = v / wavelength (from physics),
             and our "noise velocity" is xstep or zstep.
@@ -27,37 +27,60 @@ terrain::terrain(unsigned int nwidth, unsigned int nheight, float xlim, float zl
 
             verts.emplace_back();
             verts[verts.size() - 1].pos = glm::vec3(x, height, z);
+
+            if (f & features::uv) {
+                verts[verts.size() - 1].uv = glm::vec2(xn, zn);
+            }
         }
     }
 
     assert(verts.size() == nwidth * nheight);
 
     // write indices
-    for (size_t i = 0; i < 6 * nwidth * nheight; i += 6) {
-        indices.push_back(i);
-        indices.push_back(i + 1);
-        indices.push_back(i + nwidth);
+    // all calculations for indices are only valid from the top left index, which is 
+    // why weird index arithmetic is going on
+    size_t vi = 0;
+    for (size_t i = 0; i < (nwidth - 1) * (nheight - 1); i++) {
+        if (vi % nwidth == nwidth - 1) {
+            vi++;
+        }
 
-        indices.push_back(i + 1);
-        indices.push_back(i + nwidth);
-        indices.push_back(i + nwidth + 1);
+        uint32_t tl = vi;
+        uint32_t tr = vi + 1;
+        uint32_t bl = vi + nwidth;
+        uint32_t br = vi + nwidth + 1;
+
+        indices.push_back(bl);
+        indices.push_back(tr);
+        indices.push_back(tl);
+
+        indices.push_back(bl);
+        indices.push_back(br);
+        indices.push_back(tr);
+
+        vi++;
     }
 
-    assert(indices.size() == 6 * nwidth * nheight);
+    assert(indices.size() == 6 * (nwidth - 1) * (nheight - 1));
+    assert(indices.size() % 3 == 0);
 
+    for (size_t i = 0; i < indices.size(); i++) {
+        assert(indices[i] < verts.size());
+    }
+    
+    // TODO: how does assimp handle normals with indexed vertex buffers?
     if (f & features::normal) {
-        for (size_t i = 0; i < nwidth * nheight; i++) {
+        for (size_t i = 0; i < verts.size(); i++) {
             verts[i].normal = glm::vec3(0.0f, 1.0f, 0.0f);
         }
     }
 
-    if (f & features::uv) {
-        for (size_t i = 0; i < nwidth * nheight; i++) {
-            verts[i].uv = glm::vec2(0.0f, 0.0f);
-        }
-    }
-
+    // TODO: handle this eventually
     if (f & features::tangent) {
 
     }
+}
+
+float terrain::getHeight(const float x, const float z) {
+    return glm::simplex(glm::vec2(x * xfscale, z * zfscale));
 }

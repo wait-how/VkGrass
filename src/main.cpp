@@ -58,20 +58,25 @@ appvk::appvk() : c(0.0f, 1.618f, -9.764f) {
 	createMultisampleImage();
 	createFramebuffers();
 	
-	std::string_view terrainPath = "models/hills.obj";
-	vload::vloader t(terrainPath, true);
-	cout << "loaded model " << terrainPath << "\n";
+	//std::string_view terrainPath = "models/hills.obj";
+	//vload::vloader t(terrainPath, true);
+	//cout << "loaded model " << terrainPath << "\n";
+
+	uint8_t feats = terrain::features::normal | terrain::features::uv;
+	unsigned int nw = 256, nh = 256;
+	terrain t(nw, nh, 50.0f, 50.0f, feats);
+	cout << "created terrain with " << nw << "x" << nh << " samples, " << nw * nh << " vertices generated\n";
 
 	std::string_view grassPath = "models/vertical-quad.obj";
 	vload::vloader g(grassPath, false);
 	cout << "loaded model " << grassPath << "\n";
 	
-	std::tie(terrainVertBuf, terrainVertMem) = createVertexBuffer(t.meshList[0].verts);
-	std::tie(terrainIndBuf, terrainIndMem) = createIndexBuffer(t.meshList[0].indices);
+	std::tie(terrainVertBuf, terrainVertMem) = createVertexBuffer(t.verts);
+	std::tie(terrainIndBuf, terrainIndMem) = createIndexBuffer(t.indices);
 
 	std::tie(grassVertBuf, grassVertMem) = createVertexBuffer(g.meshList[0].verts);
 
-	initGrass(t.meshList[0].verts, t.meshList[0].indices);
+	initGrass(t.verts, t.indices);
 	auto bytePtr = reinterpret_cast<uint8_t*>(grassMatBuf.data());
 	std::vector<uint8_t> byteVec(bytePtr, bytePtr + grassMatBuf.size() * sizeof(glm::mat4));
 
@@ -98,7 +103,7 @@ appvk::appvk() : c(0.0f, 1.618f, -9.764f) {
 	allocDescriptorSetTexture(terrainSet, terrainSamp, terrainView);
 	allocDescriptorSetTexture(grassSet, grassSamp, grassView);
 
-	terrainIndices = t.meshList[0].indices.size();
+	terrainIndices = t.indices.size();
 	grassVertices = g.meshList[0].verts.size();
 	grassInstances = grassMatBuf.size();
 	grassIndices = g.meshList[0].indices.size();
