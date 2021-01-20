@@ -6,7 +6,7 @@ layout (location = 2) in vec2 texcoord;
 
 layout (location = 3) in mat4 instance_model;
 
-layout (set = 0, binding = 0) uniform uniformBuffer {
+layout (set = 0, binding = 0, std140) uniform uniformBuffer {
 	mat4 model;
 	mat4 view;
 	mat4 proj;

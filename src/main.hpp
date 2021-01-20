@@ -1,20 +1,16 @@
 #pragma once
 
 #include <iostream>
-
 #include <vector>
-#include <string>
 #include <string_view>
 #include <optional> // C++17, for device queue querying
-#include <set>
-#include <array> // for returning arrays of things
 #include <utility> // for std::pair
+#include <tuple>
 
-#include <cstring> // for strcmp
+#include "vformat.hpp"
 
-#include "glm_wrapper.h"
-#include "camera.h"
-#include "vloader.h"
+#include "glm_mat_wrapper.hpp"
+#include "camera.hpp"
 
 using std::cout;
 using std::cerr;
@@ -49,7 +45,7 @@ private:
 
     static void windowSizeCallback(GLFWwindow* w, int width, int height);
 
-    const std::vector<const char*> validationLayers = {
+    constexpr static std::array<const char*, 1> validationLayers = {
         "VK_LAYER_KHRONOS_validation",
     };
 
@@ -72,7 +68,7 @@ private:
 	VkPhysicalDevice pdev = VK_NULL_HANDLE;
     VkSampleCountFlagBits msaaSamples;
 
-	const std::vector<const char*> requiredExtensions = {
+	constexpr static std::array<const char*, 2> requiredExtensions = {
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 		VK_KHR_PIPELINE_EXECUTABLE_PROPERTIES_EXTENSION_NAME,
 	};
@@ -124,14 +120,14 @@ private:
 
     void createRenderPass();
 
-	struct ubo {
+	struct mvp {
 		alignas(16) glm::mat4 model;
 		alignas(16) glm::mat4 view;
 		alignas(16) glm::mat4 proj;
 	};
 
-	std::vector<VkBuffer> uniformBuffers;
-	std::vector<VkDeviceMemory> uniformMemories;
+	std::vector<VkBuffer> mvpBuffers;
+	std::vector<VkDeviceMemory> mvpMemories;
 	void createUniformBuffers();
 
     VkDescriptorSetLayout dSetLayout = VK_NULL_HANDLE;
@@ -145,7 +141,7 @@ private:
     void allocDescriptorSets(std::vector<VkDescriptorSet>& dSet);
 	void allocDescriptorSetTexture(std::vector<VkDescriptorSet>& dSet, VkSampler samp, VkImageView view);
 
-	std::vector<char> readFile(const std::string& path);
+	std::vector<char> readFile(std::string_view path);
     VkShaderModule createShaderModule(const std::vector<char>& spv);
 	
 	VkPipelineLayout terrainPipeLayout = VK_NULL_HANDLE;
@@ -183,14 +179,11 @@ private:
 
 	VkBuffer grassVertInstBuf = VK_NULL_HANDLE;
 	VkDeviceMemory grassVertInstMem = VK_NULL_HANDLE;
-    std::pair<VkBuffer, VkDeviceMemory> createVertexBuffer(std::vector<vload::vertex>& v);
+    std::pair<VkBuffer, VkDeviceMemory> createVertexBuffer(std::vector<vformat::vertex>& v);
 	std::pair<VkBuffer, VkDeviceMemory> createVertexBuffer(const std::vector<uint8_t>& verts);
 
 	VkBuffer terrainIndBuf = VK_NULL_HANDLE;
 	VkDeviceMemory terrainIndMem = VK_NULL_HANDLE;
-
-	VkBuffer grassIndBuf = VK_NULL_HANDLE;
-	VkDeviceMemory grassIndMem = VK_NULL_HANDLE;
     std::pair<VkBuffer, VkDeviceMemory> createIndexBuffer(const std::vector<uint32_t>& indices);
 
 	VkImage terrainImage = VK_NULL_HANDLE;
@@ -242,7 +235,7 @@ private:
     cam::camera c;
 
 	std::vector<glm::mat4> grassMatBuf;
-	void initGrass(const vload::mesh& surf);
+	void initGrass(const std::vector<vformat::vertex>& verts, const std::vector<uint32_t>& indices);
 	
     void updateUniformBuffer(uint32_t imageIndex);
 

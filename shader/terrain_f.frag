@@ -56,7 +56,6 @@ void main() {
 	vec3 c = texture(tex, uv).rgb;
 
 	c = phong(l, c);
-	// c = fog(3.0, 7.0, c);
 
 	fragcolor = vec4(min(c, vec3(1.0)), 1.0);
 }

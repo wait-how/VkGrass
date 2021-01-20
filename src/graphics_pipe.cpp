@@ -5,7 +5,7 @@
 #define STBI_NO_FAILURE_STRINGS
 #include "stb_image.h"
 
-#include "main.h"
+#include "main.hpp"
 
 // stores framebuffer config
 void appvk::createRenderPass() {
@@ -136,7 +136,7 @@ void appvk::createGraphicsPipeline() {
     
     VkVertexInputBindingDescription bindDesc;
     bindDesc.binding = 0;
-    bindDesc.stride = sizeof(vload::vertex);
+    bindDesc.stride = sizeof(vformat::vertex);
     bindDesc.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
     VkVertexInputAttributeDescription attrDesc[3];
@@ -427,9 +427,9 @@ std::pair<VkBuffer, VkDeviceMemory> appvk::createVertexBuffer(const std::vector<
 }
 
 // wrapper for raw createVertexBuffer that takes a vloader mesh
-std::pair<VkBuffer, VkDeviceMemory> appvk::createVertexBuffer(std::vector<vload::vertex>& v) {
+std::pair<VkBuffer, VkDeviceMemory> appvk::createVertexBuffer(std::vector<vformat::vertex>& v) {
     auto bytePtr = reinterpret_cast<uint8_t*>(v.data());
-	std::vector<uint8_t> byteData(bytePtr, bytePtr + v.size() * sizeof(vload::vertex));
+	std::vector<uint8_t> byteData(bytePtr, bytePtr + v.size() * sizeof(vformat::vertex));
 
     return createVertexBuffer(byteData);
 }

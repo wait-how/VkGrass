@@ -4,7 +4,7 @@
 
 #include <glm/vec3.hpp>
 
-#include "glfw_wrapper.h"
+#include "glfw_wrapper.hpp"
 
 namespace cam {
 	constexpr bool keyboardLook = true;

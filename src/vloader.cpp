@@ -4,7 +4,8 @@
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 
-#include "vloader.h"
+#include "vloader.hpp"
+
 using std::cout;
 using std::endl;
 
@@ -48,7 +49,7 @@ namespace vload {
 	}
 
 	mesh vloader::processMesh(aiMesh* inMesh) {
-		std::vector<vertex> vList;
+		std::vector<vformat::vertex> vList;
 		std::vector<uint32_t> indices;
 
 		vList.resize(inMesh->mNumVertices);
@@ -83,6 +84,8 @@ namespace vload {
 			cout << "mesh has no texture coordinates" << endl;
 		}
 		
+		// not using tangents right now
+		/*
 		if (inMesh->HasTangentsAndBitangents()) {
 			if (inMesh->mTextureCoords[0]) {
 				for (size_t i = 0; i < inMesh->mNumVertices; i++) {
@@ -96,6 +99,7 @@ namespace vload {
 				cout << "mesh has no texture coordinates, cannot calculate tangents" << endl;
 			}
 		}
+		*/
 		
 		return mesh(vList, indices);
 	}

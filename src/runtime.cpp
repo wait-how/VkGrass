@@ -1,9 +1,9 @@
 #include <chrono>
 #include <cmath>
 
-#include "vloader.h"
+#include "vloader.hpp"
 
-#include "main.h"
+#include "main.hpp"
 
 void appvk::createSyncs() {
     imageAvailSems.resize(framesInFlight, VK_NULL_HANDLE);
@@ -30,43 +30,48 @@ void appvk::createSyncs() {
 }
 
 void appvk::updateUniformBuffer(uint32_t imageIndex) {
-    using namespace std::chrono;
-    static auto start = high_resolution_clock::now();
-    auto current = high_resolution_clock::now();
-    float time = duration<float, seconds::period>(current - start).count();
+    //using namespace std::chrono;
+    //static auto start = high_resolution_clock::now();
+    //auto current = high_resolution_clock::now();
+    //float time = duration<float, seconds::period>(current - start).count();
 
-    time = 0;
-
-    ubo u;
-    u.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    u.model = glm::rotate(u.model, time * glm::radians(25.0f), glm::vec3(0.0, 0.0, 1.0));
-
+    mvp u;
+    u.model = glm::mat4(1.0f);
     // camera flips Y automatically
     u.view = glm::lookAt(c.pos, c.pos + c.front, glm::vec3(0.0f, 1.0f, 0.0f));
     u.proj = glm::perspective(glm::radians(25.0f), swapExtent.width / float(swapExtent.height), 0.1f, 100.0f);
 
     void* data;
-    vkMapMemory(dev, uniformMemories[imageIndex], 0, sizeof(ubo), 0, &data);
-    memcpy(data, &u, sizeof(ubo));
-    vkUnmapMemory(dev, uniformMemories[imageIndex]);
+    vkMapMemory(dev, mvpMemories[imageIndex], 0, sizeof(mvp), 0, &data);
+    memcpy(data, &u, sizeof(mvp));
+    vkUnmapMemory(dev, mvpMemories[imageIndex]);
 }
 
 // one grass section per triangle, centered on a vertex
-void appvk::initGrass(const vload::mesh& surf) {
+void appvk::initGrass(const std::vector<vformat::vertex>& verts, const std::vector<uint32_t>& indices) {
+    const size_t vsize = verts.size();
+    const size_t csize = indices.size() / 3;
+
+    grassMatBuf.resize(vsize + csize);
+    
     size_t mat_i = 0;
-    grassMatBuf.resize(surf.verts.size());
 
-    // assuming size is > 3
-    size_t size3 = surf.verts.size() - surf.verts.size() % 3;
+    // write mats for each vertex
+    for (size_t i = 0; i < vsize; i++) {
+        const glm::vec3 p = verts[i].pos;
+        grassMatBuf[mat_i++] = glm::translate(glm::mat4(1.0f), p);
+    }
+
+    const size_t isize = indices.size();
+    const size_t size3 = isize - isize % 3;
+
+    // write mats for lerped positions using indices
     for (size_t i = 0; i < size3; i += 3) {
-
-        glm::vec3 p0 = surf.verts[i].pos;
-        glm::vec3 p1 = surf.verts[i + 1].pos;
-        glm::vec3 p2 = surf.verts[i + 2].pos;
-
-        // generate edge matrices
-        grassMatBuf[mat_i++] = glm::translate(glm::mat4(1.0f), p0);
-        grassMatBuf[mat_i++] = glm::translate(glm::mat4(1.0f), p1);
-        grassMatBuf[mat_i++] = glm::translate(glm::mat4(1.0f), p2);
+        const glm::vec3 p0 = verts[indices[i]].pos;
+        const glm::vec3 p1 = verts[indices[i + 1]].pos;
+        const glm::vec3 p2 = verts[indices[i + 2]].pos;
+        
+        const glm::vec3 pl = glm::mix(glm::mix(p0, p1, 0.5f), p2, 0.5f);
+        grassMatBuf[mat_i++] = glm::translate(glm::mat4(1.0f), pl);
     }
 }

@@ -1,4 +1,4 @@
-#include "main.h"
+#include "main.hpp"
 
 void appvk::copyBuffer(VkBuffer src, VkBuffer dst, VkDeviceSize size) {
     VkCommandBuffer buf = beginSingleCommand();

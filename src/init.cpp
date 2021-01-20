@@ -1,6 +1,9 @@
-#include "extensions.h"
+#include <cstring> // for strcmp
+#include <set>
 
-#include "main.h"
+#include "extensions.hpp"
+
+#include "main.hpp"
 
 void appvk::windowSizeCallback(GLFWwindow* w, int width, int height) {
 	(void)width;
@@ -74,7 +77,7 @@ VKAPI_ATTR VkBool32 appvk::debugCallback(
     (void) userData;
     
     cerr << "\t" << data->pMessage << "\n";
-    return VK_TRUE; // abort on error
+    return VK_FALSE; // don't abort on error
 }
 
 void appvk::populateDebugMessenger(VkDebugUtilsMessengerCreateInfoEXT &createInfo) {

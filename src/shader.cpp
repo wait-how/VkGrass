@@ -1,13 +1,14 @@
-#include "extensions.h"
+#include "extensions.hpp"
+#include "main.hpp"
+
 #include <fstream>
+#include <string>
 
-#include "main.h"
-
-std::vector<char> appvk::readFile(const std::string& path) {
-    std::ifstream file(path, std::ios::ate | std::ios::binary);
+std::vector<char> appvk::readFile(std::string_view path) {
+    std::ifstream file(path.data(), std::ios::ate | std::ios::binary);
 
     if (!file) {
-        throw std::runtime_error("cannot open file " + path + "!");
+        throw std::runtime_error(std::string("cannot open file ") + path.data() + "!");
     }
     
     size_t len = static_cast<size_t>(file.tellg());

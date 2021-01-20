@@ -9,21 +9,21 @@ DB := lldb
 
 # directories to search for .cpp or .h files
 DIRS := src
+SRCS := $(wildcard src/*.cpp)
 
 # create object files and dependancy files in hidden dirs
 OBJDIR := .obj
 DEPDIR := .dep
 
-LIB_CFLAGS := $(shell pkg-config --cflags glfw3 assimp glm vulkan)
-LIB_LDFLAGS := $(shell pkg-config --libs glfw3 assimp glm vulkan)
+LIBS := glfw3 assimp glm vulkan
+LIB_CFLAGS := $(shell pkg-config --cflags $(LIBS))
+LIB_LDFLAGS := $(shell pkg-config --libs $(LIBS))
 
 # generate dependancy information, and stick it in depdir
 DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.Td
 
-CFLAGS := -Wall -std=c++17 $(LIB_CFLAGS)
+CFLAGS := -Wall -Wextra -std=c++17 $(LIB_CFLAGS)
 LDFLAGS := -fuse-ld=lld $(LIB_LDFLAGS)
-
-SRCS := $(wildcard src/*.cpp)
 
 # if any word (delimited by whitespace) of SRCS (excluding suffix) matches the wildcard '%', put it in the object or dep directory
 OBJS := $(patsubst %,$(OBJDIR)/%.o,$(basename $(SRCS)))
@@ -33,27 +33,20 @@ DEPS := $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRCS)))
 $(shell mkdir -p $(dir $(OBJS)) > /dev/null)
 $(shell mkdir -p $(dir $(DEPS)) > /dev/null)
 
-.PHONY: all clean spv getlineprofile gettimeprofile
-BINS := debug bench small lineprofile timeprofile
+.PHONY: default clean spv getprofile
+BINS := dbg opt small check 
 
-# build debug by default
-all: debug
+default: dbg
 
-# important warnings, full debug info, some optimization
-debug: CFLAGS += -Wextra -g$(DB)
+# tuned debug info, basic optimization
+dbg: CFLAGS += -g$(DB) -Og
 
-# fastest executable on my machine
-bench: CFLAGS += -Ofast -march=native -ffast-math -flto=thin -D NDEBUG
-bench: LDFLAGS += -flto=thin
+# fastest executable on current machine
+opt: CFLAGS += -Ofast -march=native -ffast-math -flto=thin -DNDEBUG
+opt: LDFLAGS += -flto=thin
 
 # smaller executable
-small: CFLAGS += -Os
-
-lineprofile: CFLAGS += -Og -fprofile-instr-generate -fcoverage-mapping
-lineprofile: LDFLAGS += -fprofile-instr-generate
-
-timeprofile: CFLAGS += -pg
-timeprofile: LDFLAGS += -pg
+small: CFLAGS += -Os -DNDEBUG
 
 # clean out .o and executable files
 clean:
@@ -65,19 +58,12 @@ clean:
 spv:
 	@cd shader && $(MAKE)
 
-# execute a profiling run and print out the results
-getlineprofile: lineprofile
-	@echo NOTE: executable has to exit for results to be generated.
-	@./lineprofile
-	@llvm-profdata merge -sparse default.profraw -o default.profdata
-	@llvm-cov show ./lineprofile -instr-profile=default.profdata -show-line-counts-or-regions > default.proftxt
-	@less default.proftxt
-
-gettimeprofile: timeprofile
-	@echo NOTE: executable has to exit for results to be generated.
-	@./profile
-	@gprof profile gmon.out -p > times.txt
-	@less times.txt
+# execute a profiling run
+# view profile with 'perf report'
+# list events to record with 'perf list'
+getprofile: dbg
+	@perf record --call-graph dwarf ./dbg
+	@echo "profile generated"
 
 # link executable together using object files in OBJDIR
 $(BINS): $(OBJS)

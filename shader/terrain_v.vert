@@ -7,7 +7,7 @@ layout (location = 0) in vec3 position;
 layout (location = 1) in vec3 normal;
 layout (location = 2) in vec2 texcoord;
 
-layout (set = 0, binding = 0) uniform uniformBuffer {
+layout (set = 0, binding = 0, std140) uniform uniformBuffer {
 	mat4 model;
 	mat4 view;
 	mat4 proj;

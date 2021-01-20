@@ -1,4 +1,7 @@
-#include "main.h"
+#include "terrain.hpp"
+#include "vloader.hpp"
+
+#include "main.hpp"
 
 void appvk::recreateSwapChain() {
 	int width, height;
@@ -29,9 +32,11 @@ void appvk::recreateSwapChain() {
 	createSyncs();
 }
 
-appvk::appvk() : c(0.0f, 1.61833f, -9.76423f) {
+appvk::appvk() : c(0.0f, 1.618f, -9.764f) {
 	createWindow();
-	// glfwSetInputMode(w, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+
+	// disable and center cursor
+	// glfwSetInputMode(w, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	createInstance();
 	if (debug) {
@@ -65,9 +70,8 @@ appvk::appvk() : c(0.0f, 1.61833f, -9.76423f) {
 	std::tie(terrainIndBuf, terrainIndMem) = createIndexBuffer(t.meshList[0].indices);
 
 	std::tie(grassVertBuf, grassVertMem) = createVertexBuffer(g.meshList[0].verts);
-	//std::tie(grassIndBuf, grassIndMem) = createIndexBuffer(g.meshList[0].indices);
 
-	initGrass(t.meshList[0]);
+	initGrass(t.meshList[0].verts, t.meshList[0].indices);
 	auto bytePtr = reinterpret_cast<uint8_t*>(grassMatBuf.data());
 	std::vector<uint8_t> byteVec(bytePtr, bytePtr + grassMatBuf.size() * sizeof(glm::mat4));
 

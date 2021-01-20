@@ -1,15 +1,14 @@
-#include "main.h"
+#include "main.hpp"
 
 void appvk::createUniformBuffers() {
-    VkDeviceSize bufferSize = sizeof(ubo);
-    uniformBuffers.resize(swapImages.size());
-    uniformMemories.resize(swapImages.size());
+    mvpBuffers.resize(swapImages.size());
+    mvpMemories.resize(swapImages.size());
 
     for (size_t i = 0; i < swapImages.size(); i++) {
-        createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
+        createBuffer(sizeof(mvp), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-        uniformBuffers[i], uniformMemories[i]);
-    }
+        mvpBuffers[i], mvpMemories[i]);
+    } 
 }
 
 void appvk::createDescriptorSetLayout() {
@@ -37,7 +36,9 @@ void appvk::createDescriptorSetLayout() {
 }
 
 void appvk::createDescriptorPool() {
-    VkDescriptorPoolSize poolSizes[2];
+    size_t numPools = 2;
+    VkDescriptorPoolSize poolSizes[numPools];
+
     poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     poolSizes[0].descriptorCount = swapImages.size();
 
@@ -46,8 +47,8 @@ void appvk::createDescriptorPool() {
 
     VkDescriptorPoolCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    createInfo.maxSets = swapImages.size() * 2;
-    createInfo.poolSizeCount = 2;
+    createInfo.maxSets = swapImages.size() * numPools;
+    createInfo.poolSizeCount = numPools;
     createInfo.pPoolSizes = poolSizes;
 
     if (vkCreateDescriptorPool(dev, &createInfo, nullptr, &dPool) != VK_SUCCESS) {
@@ -71,9 +72,9 @@ void appvk::allocDescriptorSets(std::vector<VkDescriptorSet>& dSet) {
 
     for (size_t i = 0; i < swapImages.size(); i++) {
         VkDescriptorBufferInfo bufferInfo{};
-        bufferInfo.buffer = uniformBuffers[i];
+        bufferInfo.buffer = mvpBuffers[i];
         bufferInfo.offset = 0;
-        bufferInfo.range = sizeof(ubo);
+        bufferInfo.range = sizeof(mvp);
 
         VkWriteDescriptorSet set{};
         set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

@@ -10,10 +10,10 @@ layout (location = 0) out vec4 fragcolor;
 
 void main() {
 	vec4 raw = texture(tex, uv);
-	// discarding if 1.0 leads to aliasing issues on the edge of the texture
+	// discarding if not 1.0 leads to aliasing issues on the edge of the texture
 	// discarding if not 0.0 leads to transparency problems
 	if (raw.a <= 0.9) {
 		discard;
 	}
-	fragcolor = raw;
+	fragcolor = vec4(raw);
 }

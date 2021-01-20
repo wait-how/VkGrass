@@ -1,7 +1,7 @@
 #include <cmath>
 #include <glm/geometric.hpp>
 
-#include "camera.h"
+#include "camera.hpp"
 
 namespace cam {
 

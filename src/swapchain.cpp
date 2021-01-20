@@ -1,6 +1,6 @@
-#include <cstdint> // for UINT32_MAX
+#include "main.hpp"
 
-#include "main.h"
+#include <cstdint> // for UINT32_MAX
 
 void appvk::createSurface() {
     // platform-agnostic version of vulkan create surface extension
@@ -135,8 +135,8 @@ void appvk::cleanupSwapChain() {
     vkDestroyImage(dev, msImage, nullptr);
 
     for (size_t i = 0; i < swapImages.size(); i++) {
-        vkFreeMemory(dev, uniformMemories[i], nullptr);
-        vkDestroyBuffer(dev, uniformBuffers[i], nullptr);
+        vkFreeMemory(dev, mvpMemories[i], nullptr);
+        vkDestroyBuffer(dev, mvpBuffers[i], nullptr);
     }
 
     vkDestroyDescriptorPool(dev, dPool, nullptr);

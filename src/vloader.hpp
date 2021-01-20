@@ -1,27 +1,20 @@
 #pragma once
 
+#include "vformat.hpp"
+
 #include <vector>
 #include <string>
 
 #include <assimp/scene.h>
 
-#include "glm_wrapper.h"
-
 namespace vload {
-	struct alignas(64) vertex {
-		// aligning things is a little less space-efficient, but makes offsets easier.
-		alignas(16) glm::vec3 pos;
-		alignas(16) glm::vec3 normal;
-		alignas(16) glm::vec2 uv;
-		alignas(16) glm::vec3 tangent;
-	};
 
 	class mesh {
 	public:
-		std::vector<vertex> verts;
+		std::vector<vformat::vertex> verts;
 		std::vector<uint32_t> indices; // for index buffer
 
-		mesh(const std::vector<vertex>& inVertList, const std::vector<uint32_t>& inElemList) : verts(inVertList), indices(inElemList) { }
+		mesh(const std::vector<vformat::vertex>& inVertList, const std::vector<uint32_t>& inElemList) : verts(inVertList), indices(inElemList) { }
 		mesh() : verts(), indices() { }
 	};
 
