@@ -11,6 +11,7 @@
 
 #include "glm_mat_wrapper.hpp"
 #include "camera.hpp"
+#include "terrain.hpp"
 
 using std::cout;
 using std::cerr;
@@ -233,6 +234,7 @@ private:
 
 	// this scene is set up so that the camera is in -Z looking towards +Z.
     cam::camera c;
+	terrain t;
 
 	std::vector<glm::mat4> grassMatBuf;
 	void initGrass(const std::vector<vformat::vertex>& verts, const std::vector<uint32_t>& indices);

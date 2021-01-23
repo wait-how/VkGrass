@@ -1,7 +1,9 @@
+#include "camera.hpp"
+#include "options.hpp"
+
 #include <cmath>
 #include <glm/geometric.hpp>
-
-#include "camera.hpp"
+#include <iostream>
 
 namespace cam {
 
@@ -38,15 +40,15 @@ namespace cam {
 		prevY = y;
 
 		// this flip makes movement come out correct, and is needed even if we flip elsewhere
-		float swapCoords = (flipY) ? -1.0f : 1.0f;
+		constexpr float swapCoords = (flipY) ? -1.0f : 1.0f;
 
-		if (mouseLook) {
+		if (options::mouseLook) {
 			hangle += xoff * lscale;
 			vangle += yoff * lscale * swapCoords;
 		}
 
 		// if using a laptop, sometimes the mouse can be annoying. keyboard versions of the same thing are set here.
-		if (keyboardLook) {
+		if (options::keyboardLook) {
 			if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
 				hangle -= rads(20.0f);
 			}
@@ -70,13 +72,13 @@ namespace cam {
 
 		front = glm::normalize(dir);
 		
-		glm::vec3 updir = glm::vec3(0.0f, 1.0f * swapCoords, 0.0f);
+		constexpr glm::vec3 updir = glm::vec3(0.0f, 1.0f * swapCoords, 0.0f);
 		glm::vec3 rdir = glm::cross(updir, front);
 
 		// move camera according to user input
 		// callback is annoying since it only triggers when key is updated, this is kinda cleaner and I don't really care if I miss a single keypress or two
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-			pos += glm::vec3(float(mscale)) * front; // can't multiply a scalar with a vector here...
+			pos += glm::vec3(float(mscale) * 2.0f) * front; // can't multiply a scalar with a vector here...
 		}
 		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
 			pos -= glm::vec3(float(mscale)) * front;

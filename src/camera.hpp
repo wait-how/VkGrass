@@ -7,8 +7,6 @@
 #include "glfw_wrapper.hpp"
 
 namespace cam {
-	constexpr bool keyboardLook = true;
-	constexpr bool mouseLook = false;
 	constexpr bool flipY = false; // flipping viewport, not needed here
 
 	class camera {

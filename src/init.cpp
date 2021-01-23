@@ -1,6 +1,7 @@
 #include <cstring> // for strcmp
 #include <set>
 
+#include "options.hpp"
 #include "extensions.hpp"
 
 #include "main.hpp"
@@ -217,7 +218,7 @@ void appvk::checkChooseDevice(VkPhysicalDevice pd, manufacturer m) {
     
     if (correctm && correctf && pdev == VK_NULL_HANDLE) {
         pdev = pd;
-        msaaSamples = getSamples(4);
+        msaaSamples = getSamples(options::msaaSamples);
         cout << " (selected)";
     }
 

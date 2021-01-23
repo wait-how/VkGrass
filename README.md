@@ -1,5 +1,6 @@
 # VkGrass
-Grass Demo
+A basic grass demo
+![screenshot](VkGrass.jpg)
 ## Installation
 Build dependencies:
  - pkg-config
@@ -17,9 +18,17 @@ Runtime dependencies:
  - assimp
  - glfw
 
-TODO:
+## Controls
+ - `WSAD` to move
+ - `Space` to go up
+ - `Lshift` to go down
+ - `R` to reset the camera
+
+## TODO
 0. Procedural terrain
- - get normals and uvs working
+ - vertex normal alg:
+   - calculate face normals by n = (c - a) x (c - b)
+   - for each vertex, average face normals that are adjacent to that vertex
 1. Render grass
   - Cull faraway objects on CPU
   - get grass to move from wind

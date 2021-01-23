@@ -2,6 +2,7 @@
 #include <cmath>
 
 #include "vloader.hpp"
+#include "options.hpp"
 
 #include "main.hpp"
 
@@ -37,8 +38,17 @@ void appvk::updateUniformBuffer(uint32_t imageIndex) {
 
     mvp u;
     u.model = glm::mat4(1.0f);
+    
     // camera flips Y automatically
-    u.view = glm::lookAt(c.pos, c.pos + c.front, glm::vec3(0.0f, 1.0f, 0.0f));
+    float height;
+    if (options::godMode) {
+        height = c.pos.y;
+    } else {
+        height = t.getHeight(c.pos.x, c.pos.z) + 1.0f;
+    }
+
+    const glm::vec3 p = glm::vec3(c.pos.x, height, c.pos.z);
+    u.view = glm::lookAt(p, p + c.front, glm::vec3(0.0f, 1.0f, 0.0f));
     u.proj = glm::perspective(glm::radians(25.0f), swapExtent.width / float(swapExtent.height), 0.1f, 100.0f);
 
     void* data;
@@ -61,16 +71,17 @@ void appvk::initGrass(const std::vector<vformat::vertex>& verts, const std::vect
         const glm::vec3 p = verts[i].pos;
         grassMatBuf[mat_i++] = glm::translate(glm::mat4(1.0f), p);
     }
-
-    const size_t isize = indices.size();
     
     // write mats for lerped positions using indices
+    /*
+    const size_t isize = indices.size();
     for (size_t i = 0; i < isize; i += 3) {
         const glm::vec3 p0 = verts[indices[i]].pos;
         const glm::vec3 p1 = verts[indices[i + 1]].pos;
         const glm::vec3 p2 = verts[indices[i + 2]].pos;
         
         const glm::vec3 pl = glm::mix(glm::mix(p0, p1, 0.5f), p2, 0.5f);
-        //grassMatBuf[mat_i++] = glm::translate(glm::mat4(1.0f), pl);
+        grassMatBuf[mat_i++] = glm::translate(glm::mat4(1.0f), pl);
     }
+    */
 }

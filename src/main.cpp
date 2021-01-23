@@ -1,4 +1,3 @@
-#include "terrain.hpp"
 #include "vloader.hpp"
 
 #include "main.hpp"
@@ -57,14 +56,10 @@ appvk::appvk() : c(0.0f, 1.618f, -9.764f) {
 	createDepthImage();
 	createMultisampleImage();
 	createFramebuffers();
-	
-	//std::string_view terrainPath = "models/hills.obj";
-	//vload::vloader t(terrainPath, true);
-	//cout << "loaded model " << terrainPath << "\n";
 
 	uint8_t feats = terrain::features::normal | terrain::features::uv;
-	unsigned int nw = 256, nh = 256;
-	terrain t(nw, nh, 50.0f, 50.0f, feats);
+	unsigned int nw = 192, nh = 192;
+	t.regen(nw, nh, 50.0f, 50.0f, feats);
 	cout << "created terrain with " << nw << "x" << nh << " samples, " << nw * nh << " vertices generated\n";
 
 	std::string_view grassPath = "models/vertical-quad.obj";

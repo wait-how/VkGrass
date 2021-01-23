@@ -41,6 +41,11 @@ default: dbg
 # tuned debug info, basic optimization
 dbg: CFLAGS += -g$(DB) -Og
 
+# check for memory leaks using clang's address sanitizer (much faster than Valgrind!)
+# to get symbols, set ASAN_SYMBOLIZER_PATH.
+check: CFLAGS += -g$(DB) -Og -fsanitize=address -fno-omit-frame-pointer
+check: LDFLAGS += -fsanitize=address
+
 # fastest executable on current machine
 opt: CFLAGS += -Ofast -march=native -ffast-math -flto=thin -DNDEBUG
 opt: LDFLAGS += -flto=thin

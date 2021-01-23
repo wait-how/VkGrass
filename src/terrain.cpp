@@ -1,6 +1,10 @@
 #include "terrain.hpp"
 
 terrain::terrain(unsigned int nwidth, unsigned int nheight, float xlim, float zlim, const uint8_t f) {
+    regen(nwidth, nheight, xlim, zlim, f);
+}
+
+void terrain::regen(unsigned int nwidth, unsigned int nheight, float xlim, float zlim, const uint8_t f) {
     if (nwidth < 2 && nheight < 2) {
         throw std::invalid_argument("terrain width and height must be >2!");
     }
@@ -67,8 +71,8 @@ terrain::terrain(unsigned int nwidth, unsigned int nheight, float xlim, float zl
     for (size_t i = 0; i < indices.size(); i++) {
         assert(indices[i] < verts.size());
     }
-    
-    // TODO: how does assimp handle normals with indexed vertex buffers?
+
+    // TODO: write this
     if (f & features::normal) {
         for (size_t i = 0; i < verts.size(); i++) {
             verts[i].normal = glm::vec3(0.0f, 1.0f, 0.0f);

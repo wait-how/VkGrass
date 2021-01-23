@@ -16,8 +16,11 @@ public:
         tangent = 0x4,
     };
 
-    terrain() = delete;
+    terrain() {}
     terrain(unsigned int nwidth, unsigned int nheight, float xlim, float zlim, const uint8_t f);
+
+    // regenerates terrain
+    void regen(unsigned int nwidth, unsigned int nheight, float xlim, float zlim, const uint8_t f);
 
     // return height from (x, z) coordinates
     float getHeight(const float x, const float z);
