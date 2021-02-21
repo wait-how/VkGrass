@@ -40,6 +40,8 @@ void terrain::regen(unsigned int nwidth, unsigned int nheight, float xlim, float
 
     assert(verts.size() == nwidth * nheight);
 
+    std::vector<unsigned int> ncounts(verts.size());
+
     // write indices
     // all calculations for indices are only valid from the top left index, which is 
     // why weird index arithmetic is going on
@@ -61,6 +63,36 @@ void terrain::regen(unsigned int nwidth, unsigned int nheight, float xlim, float
         indices.push_back(bl);
         indices.push_back(br);
         indices.push_back(tr);
+        
+        if (f & features::normal) {
+            // generate face normals, and add face normal to each vertex.
+            // after all normals have been generated, average them out
+            glm::vec3 n1 = glm::cross(verts[tr].pos - verts[bl].pos, verts[tr].pos - verts[tl].pos);
+            if (n1.y < 0) {
+                n1.y *= -1;
+            }
+
+            verts[bl].normal += n1;
+            verts[tr].normal += n1;
+            verts[tl].normal += n1;
+
+            ncounts[bl]++;
+            ncounts[tr]++;
+            ncounts[tl]++;
+
+            glm::vec3 n2 = glm::cross(verts[tr].pos - verts[bl].pos, verts[tr].pos - verts[br].pos);
+            if (n2.y < 0) {
+                n2.y *= -1;
+            }
+
+            verts[bl].normal += n2;
+            verts[br].normal += n2;
+            verts[tr].normal += n2;
+
+            ncounts[bl]++;
+            ncounts[tr]++;
+            ncounts[tr]++;
+        }
 
         vi++;
     }
@@ -72,10 +104,9 @@ void terrain::regen(unsigned int nwidth, unsigned int nheight, float xlim, float
         assert(indices[i] < verts.size());
     }
 
-    // TODO: write this
     if (f & features::normal) {
         for (size_t i = 0; i < verts.size(); i++) {
-            verts[i].normal = glm::vec3(0.0f, 1.0f, 0.0f);
+            verts[i].normal /= ncounts[i];
         }
     }
 

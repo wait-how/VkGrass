@@ -9,7 +9,7 @@ void appvk::recreateSwapChain() {
 		glfwGetFramebufferSize(w, &width, &height);
 		glfwWaitEvents(); // put this thread to sleep until events exist
 	}
-	
+
 	vkDeviceWaitIdle(dev);
 
 	cleanupSwapChain();
@@ -44,28 +44,28 @@ appvk::appvk() : c(0.0f, 1.618f, -9.764f) {
 	createSurface();
 	pickPhysicalDevice(nvidia);
 	createLogicalDevice();
-	
+
 	createSwapChain();
 	createSwapViews();
-	
+
 	createRenderPass();
 	createDescriptorSetLayout();
 	createGraphicsPipeline();
-	
+
 	createCommandPool();
 	createDepthImage();
 	createMultisampleImage();
 	createFramebuffers();
 
 	uint8_t feats = terrain::features::normal | terrain::features::uv;
-	unsigned int nw = 192, nh = 192;
+	unsigned int nw = 64, nh = 64;
 	t.regen(nw, nh, 50.0f, 50.0f, feats);
 	cout << "created terrain with " << nw << "x" << nh << " samples, " << nw * nh << " vertices generated\n";
 
 	std::string_view grassPath = "models/vertical-quad.obj";
 	vload::vloader g(grassPath, false);
 	cout << "loaded model " << grassPath << "\n";
-	
+
 	std::tie(terrainVertBuf, terrainVertMem) = createVertexBuffer(t.verts);
 	std::tie(terrainIndBuf, terrainIndMem) = createIndexBuffer(t.indices);
 
@@ -91,7 +91,7 @@ appvk::appvk() : c(0.0f, 1.618f, -9.764f) {
 
 	createUniformBuffers();
 	createDescriptorPool();
-	
+
 	allocDescriptorSets(terrainSet);
 	allocDescriptorSets(grassSet);
 
@@ -111,14 +111,14 @@ void appvk::drawFrame() {
 
 	// NOTE: acquiring an image, writing to it, and presenting it are all async operations.
 	// The relevant vulkan calls return before the operation completes.
-	
+
 	// wait for a command buffer to finish writing to the current image
 	vkWaitForFences(dev, 1, &inFlightFences[currFrame], VK_FALSE, UINT64_MAX);
 
 	uint32_t nextFrame;
 	VkResult r = vkAcquireNextImageKHR(dev, swap, UINT64_MAX, imageAvailSems[currFrame], VK_NULL_HANDLE, &nextFrame);
 	// NOTE: currFrame may not always be equal to nextFrame (there's no guarantee that nextFrame increases linearly)
-	
+
 	if (r == VK_ERROR_OUT_OF_DATE_KHR || resizeOccurred) {
 		recreateSwapChain(); // have to recreate the swapchain here
 		resizeOccurred = false;
@@ -138,7 +138,7 @@ void appvk::drawFrame() {
 
 	VkSubmitInfo si{};
 	si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	
+
 	VkSemaphore renderBeginSems[] = { imageAvailSems[currFrame] };
 	VkSemaphore renderEndSems[] = { renderDoneSems[currFrame] };
 
@@ -149,13 +149,13 @@ void appvk::drawFrame() {
 	// NOTE: stages not covered by a semaphore may execute before the semaphore is signaled.
 	VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 	si.pWaitDstStageMask = waitStages;
-	
+
 	si.commandBufferCount = 1;
 	si.pCommandBuffers = &commandBuffers[nextFrame];
 
 	si.signalSemaphoreCount = 1;
 	si.pSignalSemaphores = renderEndSems;
-	
+
 	vkResetFences(dev, 1, &inFlightFences[currFrame]); // has to be unsignaled for vkQueueSubmit
 	vkQueueSubmit(gQueue, 1, &si, inFlightFences[currFrame]);
 
@@ -166,7 +166,7 @@ void appvk::drawFrame() {
 	pInfo.swapchainCount = 1;
 	pInfo.pSwapchains = &swap;
 	pInfo.pImageIndices = &nextFrame;
-	
+
 	r = vkQueuePresentKHR(gQueue, &pInfo);
 	if (r == VK_ERROR_OUT_OF_DATE_KHR || resizeOccurred) {
 		recreateSwapChain();
@@ -187,7 +187,7 @@ void appvk::run() {
 		}
 		c.update(w);
 		drawFrame();
-		
+
 		if (glfwGetKey(w, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
 			glfwSetWindowShouldClose(w, GLFW_TRUE);
 		}

@@ -4,7 +4,7 @@ A basic grass demo
 ## Installation
 Build dependencies:
  - pkg-config
- - some recent version of clang++/lld (g++/ld should work, but is not tested)
+ - some recent version of clang++ (g++ should work, but is not tested)
 
 Compilation dependencies:
  - glm
@@ -40,7 +40,8 @@ Bugs:
 - camera broken with optimization?
 
 Optimizations:
-1. Make one large memory alloc and break off chunks of it for buffers
+- Make one large memory alloc and break off chunks of it for buffers
+- Use a mesh shader for generating vertices (can do a whole quad at a time!)
 
 Credits:
  - Grass billboard texture: [Reiner “Tiles” Prokein](https://www.reinerstilesets.de/graphics/lizenz/)

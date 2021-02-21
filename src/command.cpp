@@ -86,6 +86,7 @@ void appvk::allocRenderCmdBuffers() {
         
         // commands here respect submission order, but draw command pipeline stages can go out of order
         vkCmdBeginRenderPass(cbuf, &rBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+        
             VkDeviceSize offset[] = { 0 };
             vkCmdBindPipeline(cbuf, VK_PIPELINE_BIND_POINT_GRAPHICS, terrainPipe);
             vkCmdBindVertexBuffers(cbuf, 0, 1, &terrainVertBuf, offset);
