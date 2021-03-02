@@ -1,5 +1,6 @@
 #include <chrono>
 #include <cmath>
+#include <iomanip>
 
 #include "vloader.hpp"
 #include "options.hpp"
@@ -32,9 +33,9 @@ void appvk::createSyncs() {
 
 void appvk::updateUniformBuffer(uint32_t imageIndex) {
     //using namespace std::chrono;
-    //static auto start = high_resolution_clock::now();
+    //static auto last = high_resolution_clock::now();
     //auto current = high_resolution_clock::now();
-    //float time = duration<float, seconds::period>(current - start).count();
+    //float time = duration<float, seconds::period>(current - last).count();
 
     mvp u;
     u.model = glm::mat4(1.0f);

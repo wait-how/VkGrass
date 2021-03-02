@@ -25,10 +25,6 @@ Runtime dependencies:
  - `R` to reset the camera
 
 ## TODO
-0. Procedural terrain
- - vertex normal alg:
-   - calculate face normals by n = (c - a) x (c - b)
-   - for each vertex, average face normals that are adjacent to that vertex
 1. Render grass
   - Cull faraway objects on CPU
   - get grass to move from wind
