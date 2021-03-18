@@ -63,7 +63,7 @@ appvk::appvk() : c(0.0f, 1.618f, -9.764f) {
 	cout << "created terrain with " << nw << "x" << nh << " samples, " << nw * nh << " vertices generated\n";
 
 	std::string_view grassPath = "models/vertical-quad.obj";
-	vload::vloader g(grassPath, false);
+	vload::vloader g(grassPath, false, false);
 	cout << "loaded model " << grassPath << "\n";
 
 	std::tie(terrainVertBuf, terrainVertMem) = createVertexBuffer(t.verts);
@@ -78,13 +78,13 @@ appvk::appvk() : c(0.0f, 1.618f, -9.764f) {
 	std::tie(grassVertInstBuf, grassVertInstMem) = createVertexBuffer(byteVec);
 
 	std::string_view terrainFloor = "textures/floor-diffuse-1k.jpg";
-	std::tie(terrainImage, terrainMem, terrainMipLevels) = createTextureImage(terrainFloor);
+	std::tie(terrainImage, terrainMem, terrainMipLevels) = createTextureImage(terrainFloor, false);
 	cout << "loaded texture " << terrainFloor << "\n";
 	terrainView = createImageView(terrainImage, VK_FORMAT_R8G8B8A8_SRGB, terrainMipLevels, VK_IMAGE_ASPECT_COLOR_BIT);
 	terrainSamp = createSampler(terrainMipLevels);
 
 	std::string_view grassTex = "textures/grass-billboard.png";
-	std::tie(grassImage, grassMem, grassMipLevels) = createTextureImage(grassTex);
+	std::tie(grassImage, grassMem, grassMipLevels) = createTextureImage(grassTex, true);
 	cout << "loaded texture " << grassTex << "\n";
 	grassView = createImageView(grassImage, VK_FORMAT_R8G8B8A8_SRGB, grassMipLevels, VK_IMAGE_ASPECT_COLOR_BIT);
 	grassSamp = createSampler(grassMipLevels);

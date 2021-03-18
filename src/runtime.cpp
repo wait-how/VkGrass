@@ -2,7 +2,6 @@
 #include <cmath>
 #include <iomanip>
 
-#include "vloader.hpp"
 #include "options.hpp"
 
 #include "main.hpp"

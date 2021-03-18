@@ -8,8 +8,13 @@ CXX := clang++
 DB := lldb
 
 # directories to search for .cpp or .h files
-DIRS := src
-SRCS := $(wildcard src/*.cpp)
+DIRS := gfx-support src
+
+# all source files
+SRCS := $(foreach dir,$(DIRS),$(wildcard $(dir)/*.cpp))
+
+# directories to search for includes (which are all source directories)
+INCS := $(foreach dir,$(DIRS),-I$(dir))
 
 # create object files and dependancy files in hidden dirs
 OBJDIR := .obj
@@ -22,7 +27,7 @@ LIB_LDFLAGS := $(shell pkg-config --libs $(LIBS))
 # generate dependancy information, and stick it in depdir
 DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.Td
 
-CFLAGS := -Wall -Wextra -std=c++17 $(LIB_CFLAGS)
+CFLAGS := -Wall -Wextra -std=c++17 $(INCS) $(LIB_CFLAGS)
 LDFLAGS := $(LIB_LDFLAGS)
 
 # if any word (delimited by whitespace) of SRCS (excluding suffix) matches the wildcard '%', put it in the object or dep directory
@@ -33,7 +38,7 @@ DEPS := $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRCS)))
 $(shell mkdir -p $(dir $(OBJS)) > /dev/null)
 $(shell mkdir -p $(dir $(DEPS)) > /dev/null)
 
-.PHONY: default clean spv getprofile
+.PHONY: default clean spv
 BINS := dbg opt small check 
 
 default: dbg
@@ -50,8 +55,8 @@ check: LDFLAGS += -fsanitize=address
 opt: CFLAGS += -Ofast -march=native -ffast-math -flto=thin -DNDEBUG
 opt: LDFLAGS += -flto=thin
 
-# smaller executable
-small: CFLAGS += -Os -DNDEBUG
+# smallest executable
+small: CFLAGS += -Oz -DNDEBUG
 
 # clean out .o and executable files
 clean:
@@ -63,13 +68,6 @@ clean:
 spv:
 	@cd shader && $(MAKE)
 
-# execute a profiling run
-# view profile with 'perf report'
-# list events to record with 'perf list'
-getprofile: dbg
-	@perf record --call-graph dwarf ./dbg
-	@echo "profile generated"
-
 # link executable together using object files in OBJDIR
 $(BINS): $(OBJS)
 	@$(CXX) -o $@ $(LDFLAGS) $^
@@ -80,7 +78,7 @@ $(BINS): $(OBJS)
 # is updated after the target is built
 $(OBJDIR)/%.o: %.cpp
 $(OBJDIR)/%.o: %.cpp | $(DEPDIR)/%.d
-	@$(CXX) -c -o $@ $< $(CFLAGS) $(DEPFLAGS)
+	$(CXX) -c -o $@ $< $(CFLAGS) $(DEPFLAGS)
 	@mv -f $(DEPDIR)/$*.Td $(DEPDIR)/$*.d
 	@echo built $(notdir $@)
 

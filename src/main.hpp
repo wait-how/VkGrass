@@ -198,7 +198,7 @@ private:
     VkImageView grassView = VK_NULL_HANDLE;
 	VkSampler grassSamp = VK_NULL_HANDLE;
 	unsigned int grassMipLevels;
-	std::tuple<VkImage, VkDeviceMemory, unsigned int> createTextureImage(std::string_view path);
+	std::tuple<VkImage, VkDeviceMemory, unsigned int> createTextureImage(std::string_view path, bool flip);
 
     VkSampler createSampler(unsigned int mipLevels);
 	void generateMipmaps(VkImage image, VkFormat format, unsigned int width, unsigned int height, unsigned int levels);

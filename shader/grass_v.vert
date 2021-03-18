@@ -23,6 +23,6 @@ void main() {
 	gl_Position = ubo.proj * ubo.view * p4;
 	
 	p = p4.xyz;
-	n = mat3(ubo.model) * normal;
+	n = vec3(0.0, 1.0, 0.0);
 	uv = texcoord;
 }

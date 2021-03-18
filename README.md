@@ -2,6 +2,8 @@
 A basic grass demo
 ![screenshot](VkGrass.jpg)
 ## Installation
+Make sure to use the `--recurse-submodules` option when cloning.
+
 Build dependencies:
  - pkg-config
  - some recent version of clang++ (g++ should work, but is not tested)
@@ -24,18 +26,12 @@ Runtime dependencies:
  - `Lshift` to go down
  - `R` to reset the camera
 
-## TODO
-1. Render grass
-  - Cull faraway objects on CPU
+## Improvements
+- Render grass
   - get grass to move from wind
   - why do I have to flip UVs for grass?
-2. Render skybox
-3. Render sun
-
-Bugs:
-- camera broken with optimization?
-
-Optimizations:
+- Render skybox
+- Render sun
 - Make one large memory alloc and break off chunks of it for buffers
 - Use a mesh shader for generating vertices (can do a whole quad at a time!)
 

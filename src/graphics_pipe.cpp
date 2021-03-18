@@ -466,7 +466,10 @@ std::pair<VkBuffer, VkDeviceMemory> appvk::createIndexBuffer(const std::vector<u
     return std::pair(indexBuf, indexMem);
 }
 
-std::tuple<VkImage, VkDeviceMemory, unsigned int> appvk::createTextureImage(std::string_view path) {
+std::tuple<VkImage, VkDeviceMemory, unsigned int> appvk::createTextureImage(std::string_view path, bool flip) {
+    // if the image format considers the origin to be the top left (png), then flip.
+    stbi_set_flip_vertically_on_load_thread(flip);
+
     int width, height, chans;
     unsigned char *data = stbi_load(path.data(), &width, &height, &chans, STBI_rgb_alpha);
     if (!data) {
