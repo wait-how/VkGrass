@@ -66,7 +66,7 @@ void appvk::createRenderPass() {
     resolveAttachmentRef.attachment = 2;
     resolveAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-    VkSubpassDescription subs[2] = {};
+    VkSubpassDescription subs[3] = {};
     subs[0].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
     subs[0].colorAttachmentCount = 1; // color attachments are FS outputs, can also specify input / depth attachments, etc.
     subs[0].pColorAttachments = &colorAttachmentRef;
@@ -79,7 +79,13 @@ void appvk::createRenderPass() {
     subs[1].pResolveAttachments = &resolveAttachmentRef;
     subs[1].pDepthStencilAttachment = &depthAttachmentRef;
 
-    VkSubpassDependency deps[2] = {};
+    subs[2].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+    subs[2].colorAttachmentCount = 1;
+    subs[2].pColorAttachments = &colorAttachmentRef;
+    subs[2].pResolveAttachments = &resolveAttachmentRef;
+    subs[2].pDepthStencilAttachment = &depthAttachmentRef;
+
+    VkSubpassDependency deps[3] = {};
     // there's a WAW dependency between writing images due to where imageAvailSems waits
     // solution here is to delay writing to the framebuffer until the image we need is acquired (and the transition has taken place)
     
@@ -101,13 +107,22 @@ void appvk::createRenderPass() {
     deps[1].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
     deps[1].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
+    // write skybox
+    deps[2].srcSubpass = 1;
+    deps[2].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    deps[2].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+    deps[2].dstSubpass = 2;
+    deps[2].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    deps[2].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
     VkRenderPassCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     createInfo.attachmentCount = 3;
     createInfo.pAttachments = attachments;
-    createInfo.subpassCount = 2;
+    createInfo.subpassCount = 3;
     createInfo.pSubpasses = subs;
-    createInfo.dependencyCount = 2;
+    createInfo.dependencyCount = 3;
     createInfo.pDependencies = deps;
 
     if (vkCreateRenderPass(dev, &createInfo, nullptr, &renderPass) != VK_SUCCESS) {
@@ -201,7 +216,7 @@ void appvk::createGraphicsPipeline() {
     dCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
     dCreateInfo.depthTestEnable = VK_TRUE;
     dCreateInfo.depthWriteEnable = VK_TRUE;
-    dCreateInfo.depthCompareOp = VK_COMPARE_OP_LESS;
+    dCreateInfo.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
     dCreateInfo.depthBoundsTestEnable = VK_FALSE;
     dCreateInfo.stencilTestEnable = VK_FALSE;
 
@@ -263,6 +278,8 @@ void appvk::createGraphicsPipeline() {
     
     vkDestroyShaderModule(dev, terrainv, nullptr); // we can destroy shader modules once the graphics pipeline is created.
     vkDestroyShaderModule(dev, terrainf, nullptr);
+
+    VkGraphicsPipelineCreateInfo grassPipeCreateInfo = pipeCreateInfo;
 
     // creating grass pipeline from same struct since almost everything is the same
     std::vector<char> grassvspv = readFile("shader/grass_v.spv");
@@ -342,29 +359,93 @@ void appvk::createGraphicsPipeline() {
     dCreateInfo2.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
     dCreateInfo2.depthTestEnable = VK_TRUE;
     dCreateInfo2.depthWriteEnable = VK_TRUE;
-    dCreateInfo2.depthCompareOp = VK_COMPARE_OP_LESS;
+    dCreateInfo2.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
     dCreateInfo2.depthBoundsTestEnable = VK_FALSE;
     dCreateInfo2.stencilTestEnable = VK_FALSE;
 
-    pipeCreateInfo.flags = VK_PIPELINE_CREATE_DERIVATIVE_BIT;
-    pipeCreateInfo.basePipelineHandle = terrainPipe;
-    pipeCreateInfo.basePipelineIndex = -1;
-    pipeCreateInfo.pStages = grassShaders;
-    pipeCreateInfo.pVertexInputState = &vinCreateInfo2;
-    pipeCreateInfo.pRasterizationState = &rasterCreateInfo2;
-    pipeCreateInfo.pColorBlendState = &colorCreateInfo2;
-    pipeCreateInfo.pDepthStencilState = &dCreateInfo2;
-    pipeCreateInfo.layout = terrainPipeLayout;
-
+    grassPipeCreateInfo.flags = VK_PIPELINE_CREATE_DERIVATIVE_BIT;
+    grassPipeCreateInfo.basePipelineHandle = terrainPipe;
+    grassPipeCreateInfo.basePipelineIndex = -1;
+    grassPipeCreateInfo.pStages = grassShaders;
+    grassPipeCreateInfo.pVertexInputState = &vinCreateInfo2;
+    grassPipeCreateInfo.pRasterizationState = &rasterCreateInfo2;
+    grassPipeCreateInfo.pColorBlendState = &colorCreateInfo2;
+    grassPipeCreateInfo.pDepthStencilState = &dCreateInfo2;
+    grassPipeCreateInfo.layout = terrainPipeLayout;
     // render pass is the same
-    pipeCreateInfo.subpass = 1;
+    grassPipeCreateInfo.subpass = 1;
     
-    if (vkCreateGraphicsPipelines(dev, VK_NULL_HANDLE, 1, &pipeCreateInfo, nullptr, &grassPipe) != VK_SUCCESS) {
+    if (vkCreateGraphicsPipelines(dev, VK_NULL_HANDLE, 1, &grassPipeCreateInfo, nullptr, &grassPipe) != VK_SUCCESS) {
         throw std::runtime_error("cannot create graphics pipeline!");
     }
 
     vkDestroyShaderModule(dev, grassv, nullptr);
     vkDestroyShaderModule(dev, grassf, nullptr);
+
+    // creating grass pipeline from same struct since almost everything is the same
+    std::vector<char> skyvspv = readFile("shader/skybox_v.spv");
+    std::vector<char> skyfspv = readFile("shader/skybox_f.spv");
+
+    VkShaderModule skyv = createShaderModule(skyvspv);
+    VkShaderModule skyf = createShaderModule(skyfspv);
+
+    VkPipelineShaderStageCreateInfo skyShaders[2] = {};
+
+    skyShaders[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    skyShaders[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+    skyShaders[0].module = skyv;
+    skyShaders[0].pName = "main";
+
+    skyShaders[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    skyShaders[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+    skyShaders[1].module = skyf;
+    skyShaders[1].pName = "main";
+
+    VkGraphicsPipelineCreateInfo skyPipeCreateInfo = pipeCreateInfo;
+    skyPipeCreateInfo.pStages = skyShaders;
+
+    VkVertexInputBindingDescription skyBindDesc;
+    skyBindDesc.binding = 0;
+    skyBindDesc.stride = sizeof(vformat::vertex);
+    skyBindDesc.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+    VkVertexInputAttributeDescription skyAttrDesc;
+    skyAttrDesc.location = 0;
+    skyAttrDesc.binding = 0;
+    skyAttrDesc.format = VK_FORMAT_R32G32B32_SFLOAT;
+    skyAttrDesc.offset = 0;
+
+    VkPipelineVertexInputStateCreateInfo skyVertCreateInfo{};
+    skyVertCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    skyVertCreateInfo.vertexBindingDescriptionCount = 1;
+    skyVertCreateInfo.pVertexBindingDescriptions = &skyBindDesc;
+    skyVertCreateInfo.vertexAttributeDescriptionCount = 1;
+    skyVertCreateInfo.pVertexAttributeDescriptions = &skyAttrDesc;
+
+    VkPipelineRasterizationStateCreateInfo skyRasterCreateInfo{};
+    skyRasterCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+    skyRasterCreateInfo.depthClampEnable = VK_FALSE;
+    skyRasterCreateInfo.rasterizerDiscardEnable = VK_FALSE;
+    skyRasterCreateInfo.polygonMode = VK_POLYGON_MODE_FILL;
+    skyRasterCreateInfo.cullMode = VK_CULL_MODE_NONE;
+    skyRasterCreateInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+    skyRasterCreateInfo.depthBiasEnable = VK_FALSE;
+    skyRasterCreateInfo.lineWidth = 1.0f;
+
+    skyPipeCreateInfo.pVertexInputState = &skyVertCreateInfo;
+    skyPipeCreateInfo.pRasterizationState = &skyRasterCreateInfo;
+
+    skyPipeCreateInfo.flags = VK_PIPELINE_CREATE_DERIVATIVE_BIT;
+    skyPipeCreateInfo.basePipelineHandle = terrainPipe;
+    skyPipeCreateInfo.basePipelineIndex = -1;
+    skyPipeCreateInfo.subpass = 2;
+
+    if (vkCreateGraphicsPipelines(dev, VK_NULL_HANDLE, 1, &skyPipeCreateInfo, nullptr, &skyPipe) != VK_SUCCESS) {
+        throw std::runtime_error("cannot create skybox pipeline!");
+    }
+
+    vkDestroyShaderModule(dev, skyv, nullptr);
+    vkDestroyShaderModule(dev, skyf, nullptr);
 }
 
 void appvk::createFramebuffers() {

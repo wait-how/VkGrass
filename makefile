@@ -78,7 +78,7 @@ $(BINS): $(OBJS)
 # is updated after the target is built
 $(OBJDIR)/%.o: %.cpp
 $(OBJDIR)/%.o: %.cpp | $(DEPDIR)/%.d
-	$(CXX) -c -o $@ $< $(CFLAGS) $(DEPFLAGS)
+	@$(CXX) -c -o $@ $< $(CFLAGS) $(DEPFLAGS)
 	@mv -f $(DEPDIR)/$*.Td $(DEPDIR)/$*.d
 	@echo built $(notdir $@)
 

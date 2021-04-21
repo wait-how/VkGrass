@@ -145,6 +145,7 @@ void appvk::cleanupSwapChain() {
         vkDestroyFramebuffer(dev, framebuffer, nullptr);
     }
 
+    vkDestroyPipeline(dev, skyPipe, nullptr);
     vkDestroyPipeline(dev, terrainPipe, nullptr);
     vkDestroyPipeline(dev, grassPipe, nullptr);
     vkDestroyPipelineLayout(dev, terrainPipeLayout, nullptr);

@@ -57,8 +57,8 @@ appvk::appvk() : c(0.0f, 1.618f, -9.764f) {
 	createMultisampleImage();
 	createFramebuffers();
 
-	uint8_t feats = terrain::features::normal | terrain::features::uv;
-	unsigned int nw = 64, nh = 64;
+	uint8_t feats = ter::terrain::features::normal | ter::terrain::features::uv;
+	unsigned int nw = 128, nh = 128;
 	t.regen(nw, nh, 50.0f, 50.0f, feats);
 	cout << "created terrain with " << nw << "x" << nh << " samples, " << nw * nh << " vertices generated\n";
 
@@ -66,10 +66,16 @@ appvk::appvk() : c(0.0f, 1.618f, -9.764f) {
 	vload::vloader g(grassPath, false, false);
 	cout << "loaded model " << grassPath << "\n";
 
+	std::string_view skyPath = "models/cube.obj";
+	vload::vloader s(skyPath, false, false);
+	cout << "loaded model " << skyPath << "\n";
+
 	std::tie(terrainVertBuf, terrainVertMem) = createVertexBuffer(t.verts);
 	std::tie(terrainIndBuf, terrainIndMem) = createIndexBuffer(t.indices);
 
 	std::tie(grassVertBuf, grassVertMem) = createVertexBuffer(g.meshList[0].verts);
+
+	std::tie(skyVertBuf, skyVertMem) = createVertexBuffer(s.meshList[0].verts);
 
 	initGrass(t.verts, t.indices);
 	auto bytePtr = reinterpret_cast<uint8_t*>(grassMatBuf.data());
@@ -102,6 +108,7 @@ appvk::appvk() : c(0.0f, 1.618f, -9.764f) {
 	grassVertices = g.meshList[0].verts.size();
 	grassInstances = grassMatBuf.size();
 	grassIndices = g.meshList[0].indices.size();
+	skyVertices = s.meshList[0].verts.size();
 	allocRenderCmdBuffers();
 
 	createSyncs();

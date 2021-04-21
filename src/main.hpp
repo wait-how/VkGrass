@@ -148,6 +148,8 @@ private:
 	VkPipelineLayout terrainPipeLayout = VK_NULL_HANDLE;
 	VkPipeline terrainPipe = VK_NULL_HANDLE;
 
+	VkPipeline skyPipe = VK_NULL_HANDLE;
+
 	VkPipeline grassPipe = VK_NULL_HANDLE;
 	void createGraphicsPipeline();
 
@@ -177,6 +179,9 @@ private:
 
 	VkBuffer grassVertBuf = VK_NULL_HANDLE;
 	VkDeviceMemory grassVertMem = VK_NULL_HANDLE;
+
+	VkBuffer skyVertBuf = VK_NULL_HANDLE;
+	VkDeviceMemory skyVertMem = VK_NULL_HANDLE;
 
 	VkBuffer grassVertInstBuf = VK_NULL_HANDLE;
 	VkDeviceMemory grassVertInstMem = VK_NULL_HANDLE;
@@ -219,6 +224,7 @@ private:
 	uint32_t grassVertices;
 	uint32_t grassInstances;
 	uint32_t grassIndices;
+	uint32_t skyVertices;
 	void allocRenderCmdBuffers();
 
 	constexpr static unsigned int framesInFlight = 2;
@@ -234,7 +240,7 @@ private:
 
 	// this scene is set up so that the camera is in -Z looking towards +Z.
     cam::camera c;
-	terrain t;
+	ter::terrain t;
 
 	std::vector<glm::mat4> grassMatBuf;
 	void initGrass(const std::vector<vformat::vertex>& verts, const std::vector<uint32_t>& indices);

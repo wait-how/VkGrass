@@ -19,7 +19,7 @@ layout (location = 2) out vec2 uv;
 
 void main() {
 
-	vec4 p4 = ubo.model * vec4(position, 1.0);
+	vec4 p4 = vec4(position, 1.0);
 
 	gl_Position = ubo.proj * ubo.view * p4;
 	

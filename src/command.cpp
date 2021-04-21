@@ -103,6 +103,13 @@ void appvk::allocRenderCmdBuffers() {
             vkCmdBindDescriptorSets(cbuf, VK_PIPELINE_BIND_POINT_GRAPHICS, terrainPipeLayout, 0, 1, &grassSet[i], 0, nullptr);
             vkCmdDraw(cbuf, grassVertices, grassInstances, 0, 0);
 
+            vkCmdNextSubpass(cbuf, VK_SUBPASS_CONTENTS_INLINE);
+
+            vkCmdBindPipeline(cbuf, VK_PIPELINE_BIND_POINT_GRAPHICS, skyPipe);
+            vkCmdBindVertexBuffers(cbuf, 0, 1, &skyVertBuf, offset);
+            vkCmdBindDescriptorSets(cbuf, VK_PIPELINE_BIND_POINT_GRAPHICS, terrainPipeLayout, 0, 1, &terrainSet[i], 0, nullptr);
+            vkCmdDraw(cbuf, skyVertices, 1, 0, 0);
+
         vkCmdEndRenderPass(cbuf);
         
         if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS) {

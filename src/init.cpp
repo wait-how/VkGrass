@@ -340,6 +340,9 @@ appvk::~appvk() {
     vkFreeMemory(dev, grassVertInstMem, nullptr);
     vkDestroyBuffer(dev, grassVertInstBuf, nullptr);
 
+    vkFreeMemory(dev, skyVertMem, nullptr);
+    vkDestroyBuffer(dev, skyVertBuf, nullptr);
+
     vkDestroyDevice(dev, nullptr);
     vkDestroySurfaceKHR(instance, surf, nullptr);
 
