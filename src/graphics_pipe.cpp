@@ -131,8 +131,8 @@ void appvk::createRenderPass() {
 }
 
 void appvk::createGraphicsPipeline() {
-    std::vector<char> terrainvspv = readFile("shader/terrain_v.spv");
-    std::vector<char> terrainfspv = readFile("shader/terrain_f.spv");
+    std::vector<char> terrainvspv = readFile(".spv/terrain.vert.spv");
+    std::vector<char> terrainfspv = readFile(".spv/terrain.frag.spv");
 
     VkShaderModule terrainv = createShaderModule(terrainvspv);
     VkShaderModule terrainf = createShaderModule(terrainfspv);
@@ -282,8 +282,8 @@ void appvk::createGraphicsPipeline() {
     VkGraphicsPipelineCreateInfo grassPipeCreateInfo = pipeCreateInfo;
 
     // creating grass pipeline from same struct since almost everything is the same
-    std::vector<char> grassvspv = readFile("shader/grass_v.spv");
-    std::vector<char> grassfspv = readFile("shader/grass_f.spv");
+    std::vector<char> grassvspv = readFile(".spv/grass.vert.spv");
+    std::vector<char> grassfspv = readFile(".spv/grass.frag.spv");
 
     VkShaderModule grassv = createShaderModule(grassvspv);
     VkShaderModule grassf = createShaderModule(grassfspv);
@@ -383,8 +383,8 @@ void appvk::createGraphicsPipeline() {
     vkDestroyShaderModule(dev, grassf, nullptr);
 
     // creating grass pipeline from same struct since almost everything is the same
-    std::vector<char> skyvspv = readFile("shader/skybox_v.spv");
-    std::vector<char> skyfspv = readFile("shader/skybox_f.spv");
+    std::vector<char> skyvspv = readFile(".spv/skybox.vert.spv");
+    std::vector<char> skyfspv = readFile(".spv/skybox.frag.spv");
 
     VkShaderModule skyv = createShaderModule(skyvspv);
     VkShaderModule skyf = createShaderModule(skyfspv);

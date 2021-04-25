@@ -3,31 +3,30 @@ CC := glslangValidator
 # stages named <name>.vert, <vert>.frag, etc. get
 # converted to vert.spv, frag.spv, etc by glslang
 
-SPV := terrain_v.spv terrain_f.spv grass_v.spv grass_f.spv skybox_v.spv skybox_f.spv
+# put compiled .spv files in .spv directory
+SPVDIR := ../.spv
+
+# grab anything that isn't a makefile
+SHDRS := $(wildcard *.*)
+
+# create .spv files in hidden directory
+SPVS := $(addprefix $(SPVDIR)/,$(addsuffix .spv,$(SHDRS)))
+
 BUILD = $(CC) --target-env vulkan1.2 -t $^ -o $@
 
-.PHONY: clean
+# make .spv directory at startup
+$(shell mkdir -p $(SPVDIR) > /dev/null)
 
-all: $(SPV)
+# keep .spv files if make dies
+.PRECIOUS: $(SPVDIR)/%.spv
 
-terrain_v.spv: terrain_v.vert
-	$(BUILD)
+.PHONY: clean all
 
-terrain_f.spv: terrain_f.frag
-	$(BUILD)
+# build all shader files by default
+all: $(SPVS)
 
-grass_v.spv: grass_v.vert
-	$(BUILD)
-
-grass_f.spv: grass_f.frag
-	$(BUILD)
-
-skybox_v.spv: skybox_v.vert
-	$(BUILD)
-
-skybox_f.spv: skybox_f.frag
-	$(BUILD)
+$(SPVDIR)/%.spv: %
+	@$(BUILD)
 
 clean:
-	@rm -f *.spv
-
+	@rm -rf $(SPVDIR)
