@@ -140,6 +140,7 @@ void appvk::cleanupSwapChain() {
     }
 
     vkDestroyDescriptorPool(dev, dPool, nullptr);
+    vkDestroyDescriptorPool(dev, skyPool, nullptr);
 
     for (auto framebuffer : swapFramebuffers) {
         vkDestroyFramebuffer(dev, framebuffer, nullptr);
@@ -149,6 +150,7 @@ void appvk::cleanupSwapChain() {
     vkDestroyPipeline(dev, terrainPipe, nullptr);
     vkDestroyPipeline(dev, grassPipe, nullptr);
     vkDestroyPipelineLayout(dev, terrainPipeLayout, nullptr);
+    vkDestroyPipelineLayout(dev, skyPipeLayout, nullptr);
     vkDestroyRenderPass(dev, renderPass, nullptr);
     
     for (const auto& view : swapImageViews) {

@@ -107,7 +107,7 @@ void appvk::allocRenderCmdBuffers() {
 
             vkCmdBindPipeline(cbuf, VK_PIPELINE_BIND_POINT_GRAPHICS, skyPipe);
             vkCmdBindVertexBuffers(cbuf, 0, 1, &skyVertBuf, offset);
-            vkCmdBindDescriptorSets(cbuf, VK_PIPELINE_BIND_POINT_GRAPHICS, terrainPipeLayout, 0, 1, &terrainSet[i], 0, nullptr);
+            vkCmdBindDescriptorSets(cbuf, VK_PIPELINE_BIND_POINT_GRAPHICS, skyPipeLayout, 0, 1, &skySet[i], 0, nullptr);
             vkCmdDraw(cbuf, skyVertices, 1, 0, 0);
 
         vkCmdEndRenderPass(cbuf);

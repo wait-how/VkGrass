@@ -132,14 +132,18 @@ private:
 	void createUniformBuffers();
 
     VkDescriptorSetLayout dSetLayout = VK_NULL_HANDLE;
-    void createDescriptorSetLayout();
+	VkDescriptorSetLayout skySetLayout = VK_NULL_HANDLE;
+    void createDescriptorSetLayouts();
 
     VkDescriptorPool dPool = VK_NULL_HANDLE;
-    void createDescriptorPool();
+	VkDescriptorPool skyPool = VK_NULL_HANDLE;
+    void createDescriptorPools();
 
     std::vector<VkDescriptorSet> terrainSet;
 	std::vector<VkDescriptorSet> grassSet;
-    void allocDescriptorSets(std::vector<VkDescriptorSet>& dSet);
+	std::vector<VkDescriptorSet> skySet;
+	void allocDescriptorSets(VkDescriptorPool pool, std::vector<VkDescriptorSet>& dSet, VkDescriptorSetLayout layout);
+    void allocDescriptorSetUniform(std::vector<VkDescriptorSet>& dSet);
 	void allocDescriptorSetTexture(std::vector<VkDescriptorSet>& dSet, VkSampler samp, VkImageView view);
 
 	std::vector<char> readFile(std::string_view path);
@@ -148,6 +152,7 @@ private:
 	VkPipelineLayout terrainPipeLayout = VK_NULL_HANDLE;
 	VkPipeline terrainPipe = VK_NULL_HANDLE;
 
+	VkPipelineLayout skyPipeLayout = VK_NULL_HANDLE;
 	VkPipeline skyPipe = VK_NULL_HANDLE;
 
 	VkPipeline grassPipe = VK_NULL_HANDLE;
@@ -169,9 +174,11 @@ private:
     void endSingleCommand(VkCommandBuffer buf);
 
 	void createImage(unsigned int width, unsigned int height, VkFormat format, unsigned int mipLevels, VkSampleCountFlagBits samples, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags props, VkImage& image, VkDeviceMemory& imageMemory);
-    void transitionImageLayout(VkImage image, VkImageLayout oldl, VkImageLayout newl, unsigned int mipLevels);
+	void createCubeImage(unsigned int width, unsigned int height, VkFormat format, VkSampleCountFlagBits samples, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags props, VkImage& image, VkDeviceMemory& imageMemory);
+    VkImageView createCubeImageView(VkImage im, VkFormat format);
+	void transitionImageLayout(VkImage image, VkImageLayout oldl, VkImageLayout newl, unsigned int mipLevels, unsigned int layers);
     
-    void copyBufferToImage(VkBuffer buf, VkImage img, uint32_t width, uint32_t height);
+    void copyBufferToImage(VkBuffer buf, VkImage img, uint32_t width, uint32_t height, uint32_t layers);
     void copyBuffer(VkBuffer src, VkBuffer dst, VkDeviceSize size);
 
 	VkBuffer terrainVertBuf = VK_NULL_HANDLE;
@@ -203,10 +210,17 @@ private:
     VkImageView grassView = VK_NULL_HANDLE;
 	VkSampler grassSamp = VK_NULL_HANDLE;
 	unsigned int grassMipLevels;
+
+	VkImage cubeImage = VK_NULL_HANDLE;
+	VkDeviceMemory cubeMem = VK_NULL_HANDLE;
+    VkImageView cubeView = VK_NULL_HANDLE;
+	VkSampler cubeSamp = VK_NULL_HANDLE;
 	std::tuple<VkImage, VkDeviceMemory, unsigned int> createTextureImage(std::string_view path, bool flip);
+	std::tuple<VkImage, VkDeviceMemory> createCubemapImage(std::array<std::string_view, 6> paths, bool flip);
 
     VkSampler createSampler(unsigned int mipLevels);
-	void generateMipmaps(VkImage image, VkFormat format, unsigned int width, unsigned int height, unsigned int levels);
+	VkSampler createCubeSampler();
+	void generateMipmaps(VkImage image, VkFormat format, unsigned int width, unsigned int height, unsigned int levels, unsigned int layers);
 
 	VkImage depthImage = VK_NULL_HANDLE;
 	VkDeviceMemory depthMemory = VK_NULL_HANDLE;

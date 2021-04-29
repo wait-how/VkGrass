@@ -22,11 +22,16 @@ void appvk::recreateSwapChain() {
 	createMultisampleImage();
 	createFramebuffers();
 	createUniformBuffers();
-	createDescriptorPool();
-	allocDescriptorSets(terrainSet);
-	allocDescriptorSets(grassSet);
+	createDescriptorPools();
+	allocDescriptorSets(dPool, terrainSet, dSetLayout);
+	allocDescriptorSets(dPool, grassSet, dSetLayout);
+	allocDescriptorSets(skyPool, skySet, skySetLayout);
+	allocDescriptorSetUniform(terrainSet);
+	allocDescriptorSetUniform(grassSet);
+	allocDescriptorSetUniform(skySet);
 	allocDescriptorSetTexture(terrainSet, terrainSamp, terrainView);
 	allocDescriptorSetTexture(grassSet, grassSamp, grassView);
+	allocDescriptorSetTexture(skySet, cubeSamp, cubeView);
 	allocRenderCmdBuffers();
 	createSyncs();
 }
@@ -49,7 +54,7 @@ appvk::appvk() : c(0.0f, 1.618f, -9.764f) {
 	createSwapViews();
 
 	createRenderPass();
-	createDescriptorSetLayout();
+	createDescriptorSetLayouts();
 	createGraphicsPipeline();
 
 	createCommandPool();
@@ -95,14 +100,34 @@ appvk::appvk() : c(0.0f, 1.618f, -9.764f) {
 	grassView = createImageView(grassImage, VK_FORMAT_R8G8B8A8_SRGB, grassMipLevels, VK_IMAGE_ASPECT_COLOR_BIT);
 	grassSamp = createSampler(grassMipLevels);
 
-	createUniformBuffers();
-	createDescriptorPool();
+	std::array<std::string_view, 6> skyTex;
+	skyTex[0] = "textures/bluecloud_rt.jpg"; // +x
+	skyTex[1] = "textures/bluecloud_lf.jpg"; // -x
+	skyTex[2] = "textures/bluecloud_up.jpg"; // +y
+	skyTex[3] = "textures/bluecloud_dn.jpg"; // -y
+	skyTex[4] = "textures/bluecloud_bk.jpg"; // +z
+	skyTex[5] = "textures/bluecloud_ft.jpg"; // -z
 
-	allocDescriptorSets(terrainSet);
-	allocDescriptorSets(grassSet);
+	std::tie(cubeImage, cubeMem) = createCubemapImage(skyTex, false);
+	cout << "loaded cubemap\n";
+
+	cubeView = createCubeImageView(cubeImage, VK_FORMAT_R8G8B8A8_SRGB);
+	cubeSamp = createSampler(1);
+
+	createUniformBuffers();
+	createDescriptorPools();
+
+	allocDescriptorSets(dPool, terrainSet, dSetLayout);
+	allocDescriptorSets(dPool, grassSet, dSetLayout);
+	allocDescriptorSets(skyPool, skySet, skySetLayout);
+
+	allocDescriptorSetUniform(terrainSet);
+	allocDescriptorSetUniform(grassSet);
+	allocDescriptorSetUniform(skySet);
 
 	allocDescriptorSetTexture(terrainSet, terrainSamp, terrainView);
 	allocDescriptorSetTexture(grassSet, grassSamp, grassView);
+	allocDescriptorSetTexture(skySet, cubeSamp, cubeView);
 
 	terrainIndices = t.indices.size();
 	grassVertices = g.meshList[0].verts.size();

@@ -432,8 +432,18 @@ void appvk::createGraphicsPipeline() {
     skyRasterCreateInfo.depthBiasEnable = VK_FALSE;
     skyRasterCreateInfo.lineWidth = 1.0f;
 
+    VkPipelineLayoutCreateInfo skyLayoutCreateInfo{};
+    skyLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    skyLayoutCreateInfo.setLayoutCount = 1;
+    skyLayoutCreateInfo.pSetLayouts = &skySetLayout;
+
+    if (vkCreatePipelineLayout(dev, &skyLayoutCreateInfo, nullptr, &skyPipeLayout) != VK_SUCCESS) {
+        throw std::runtime_error("cannot create skybox layout!");
+    }
+
     skyPipeCreateInfo.pVertexInputState = &skyVertCreateInfo;
     skyPipeCreateInfo.pRasterizationState = &skyRasterCreateInfo;
+    skyPipeCreateInfo.layout = skyPipeLayout;
 
     skyPipeCreateInfo.flags = VK_PIPELINE_CREATE_DERIVATIVE_BIT;
     skyPipeCreateInfo.basePipelineHandle = terrainPipe;
@@ -587,15 +597,71 @@ std::tuple<VkImage, VkDeviceMemory, unsigned int> appvk::createTextureImage(std:
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
         texImage, texMem);
     
-    transitionImageLayout(texImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels);
-    copyBufferToImage(sbuf, texImage, uint32_t(width), uint32_t(height));
+    transitionImageLayout(texImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels, 1);
+    copyBufferToImage(sbuf, texImage, uint32_t(width), uint32_t(height), 1);
 
     vkFreeMemory(dev, smem, nullptr);
     vkDestroyBuffer(dev, sbuf, nullptr);
 
-    generateMipmaps(texImage, VK_FORMAT_R8G8B8A8_SRGB, width, height, mipLevels);
+    generateMipmaps(texImage, VK_FORMAT_R8G8B8A8_SRGB, width, height, mipLevels, 1);
 
     return std::tuple(texImage, texMem, mipLevels);
+}
+
+std::tuple<VkImage, VkDeviceMemory> appvk::createCubemapImage(std::array<std::string_view, 6> paths, bool flip) {
+    // if the image format considers the origin to be the top left (png), then flip.
+    stbi_set_flip_vertically_on_load_thread(flip);
+
+    unsigned char* imgs[6];
+
+    int width, height, chans;
+    for (size_t i = 0; i < 6; i++) {
+        imgs[i] = stbi_load(paths[i].data(), &width, &height, &chans, STBI_rgb_alpha);
+        if (!imgs[i]) {
+            throw std::runtime_error("cannot load texture!");
+        }
+    }
+    
+    VkDeviceSize imageSize = width * height * 4;
+    VkDeviceSize cubeSize = imageSize * 6;
+
+    VkBuffer sbuf = VK_NULL_HANDLE;
+    VkDeviceMemory smem = VK_NULL_HANDLE;
+
+    createBuffer(cubeSize, 
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        sbuf, smem);
+
+    for (size_t i = 0; i < 6; i++) {
+        void *map_data;
+        vkMapMemory(dev, smem, i * imageSize, imageSize, 0, &map_data);
+        memcpy(map_data, imgs[i], imageSize);
+        vkUnmapMemory(dev, smem);
+        stbi_image_free(imgs[i]);
+    }
+
+    VkImage texImage;
+    VkDeviceMemory texMem;
+
+    // used as a src when blitting to make mipmaps
+    createCubeImage(width, height, VK_FORMAT_R8G8B8A8_SRGB, VK_SAMPLE_COUNT_1_BIT,
+        VK_IMAGE_TILING_OPTIMAL,
+        VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
+        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+        texImage, texMem);
+    
+    transitionImageLayout(texImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, 6);
+    copyBufferToImage(sbuf, texImage, uint32_t(width), uint32_t(height), 6);
+
+    vkFreeMemory(dev, smem, nullptr);
+    vkDestroyBuffer(dev, sbuf, nullptr);
+
+    // no mip levels generated, but this puts all cube images in the shader read optimal layout
+    generateMipmaps(texImage, VK_FORMAT_R8G8B8A8_SRGB, width, height, 1, 6);
+
+    return std::tuple(texImage, texMem);
 }
 
 void appvk::createDepthImage() {
@@ -606,7 +672,7 @@ void appvk::createDepthImage() {
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
         depthImage, depthMemory);
     
-    transitionImageLayout(depthImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1);
+    transitionImageLayout(depthImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1, 1);
     
     depthView = createImageView(depthImage, depthFormat, 1, VK_IMAGE_ASPECT_DEPTH_BIT);
 }

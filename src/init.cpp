@@ -315,6 +315,7 @@ appvk::~appvk() {
     cleanupSwapChain();
 
     vkDestroyDescriptorSetLayout(dev, dSetLayout, nullptr);
+    vkDestroyDescriptorSetLayout(dev, skySetLayout, nullptr);
 
     vkDestroyCommandPool(dev, cp, nullptr);
 
@@ -327,6 +328,11 @@ appvk::~appvk() {
     vkDestroyImageView(dev, grassView, nullptr);
     vkFreeMemory(dev, grassMem, nullptr);
     vkDestroyImage(dev, grassImage, nullptr);
+
+    vkDestroySampler(dev, cubeSamp, nullptr);
+    vkDestroyImageView(dev, cubeView, nullptr);
+    vkFreeMemory(dev, cubeMem, nullptr);
+    vkDestroyImage(dev, cubeImage, nullptr);
 
     vkFreeMemory(dev, terrainIndMem, nullptr);
     vkDestroyBuffer(dev, terrainIndBuf, nullptr);
