@@ -30,7 +30,6 @@ Runtime dependencies:
 - Render grass
   - get grass to move from wind
   - why do I have to flip UVs for grass?
-- Render skybox
 - Render sun
 - Make one large memory alloc and break off chunks of it for buffers
 - Use a mesh shader for generating vertices (can do a whole quad at a time!)
