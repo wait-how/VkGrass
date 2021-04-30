@@ -101,15 +101,15 @@ appvk::appvk() : c(0.0f, 1.618f, -9.764f) {
 	grassSamp = createSampler(grassMipLevels);
 
 	std::array<std::string_view, 6> skyTex;
-	skyTex[0] = "textures/bluecloud_rt.jpg"; // +x
-	skyTex[1] = "textures/bluecloud_lf.jpg"; // -x
-	skyTex[2] = "textures/bluecloud_up.jpg"; // +y
-	skyTex[3] = "textures/bluecloud_dn.jpg"; // -y
-	skyTex[4] = "textures/bluecloud_bk.jpg"; // +z
-	skyTex[5] = "textures/bluecloud_ft.jpg"; // -z
+	skyTex[0] = "textures/right.jpg"; // +x (right)
+	skyTex[1] = "textures/left.jpg"; // -x (left)
+	skyTex[2] = "textures/top.jpg"; // +y (top)
+	skyTex[3] = "textures/bottom.jpg"; // -y (bottom)
+	skyTex[4] = "textures/front.jpg"; // +z (front)
+	skyTex[5] = "textures/back.jpg"; // -z (back)
 
 	std::tie(cubeImage, cubeMem) = createCubemapImage(skyTex, false);
-	cout << "loaded cubemap\n";
+	cout << "loaded cubemap texture\n";
 
 	cubeView = createCubeImageView(cubeImage, VK_FORMAT_R8G8B8A8_SRGB);
 	cubeSamp = createSampler(1);

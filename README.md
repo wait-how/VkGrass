@@ -36,5 +36,5 @@ Runtime dependencies:
 
 Credits:
  - Grass billboard texture: [Reiner “Tiles” Prokein](https://www.reinerstilesets.de/graphics/lizenz/)
- - Skybox texture: [Pieter "Spiney" Verhoeven](https://opengameart.org/users/spiney)
+ - Skybox texture: [LearnOpenGL](https://learnopengl.com/Advanced-OpenGL/Cubemaps)
  - Everything else: me
