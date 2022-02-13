@@ -1,6 +1,6 @@
 # VkGrass
-A basic grass demo
-![screenshot](VkGrass.jpg)
+A basic interactive demo of rolling hills and grass using simplex noise for procedural terrain generation.
+![screenshot](VkGrass.png)
 ## Installation
 Make sure to use the `--recurse-submodules` option when cloning.
 
@@ -30,7 +30,6 @@ Runtime dependencies:
 - Render grass
   - get grass to move from wind
   - why do I have to flip UVs for grass?
-- Render sun
 - Make one large memory alloc and break off chunks of it for buffers
 - Use a mesh shader for generating vertices (can do a whole quad at a time!)
 

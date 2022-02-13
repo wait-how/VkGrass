@@ -63,7 +63,7 @@ appvk::appvk() : c(0.0f, 1.618f, -9.764f) {
 	createFramebuffers();
 
 	uint8_t feats = ter::terrain::features::normal | ter::terrain::features::uv;
-	unsigned int nw = 128, nh = 128;
+	unsigned int nw = 256, nh = 256;
 	t.regen(nw, nh, 50.0f, 50.0f, feats);
 	cout << "created terrain with " << nw << "x" << nh << " samples, " << nw * nh << " vertices generated\n";
 
